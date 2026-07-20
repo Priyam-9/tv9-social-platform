@@ -1,0 +1,14 @@
+POST /auth/login
+POST /auth/logout
+POST /auth/refresh
+POST /users
+GET /users
+POST /contents
+GET /contents
+GET /contents/{id}
+PUT /contents/{id}
+DELETE /contents/{id}
+POST /publish
+POST /schedule
+GET /analytics
+GET /notifications
