@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>TV9 Multi-Platform Publisher — Demo</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #171a21;
+    --border: #2a2e38;
+    --text: #e8e9ec;
+    --muted: #8b8f9a;
+    --crimson: #b3122e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 32px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+  }
+  h1 span { color: var(--crimson); }
+  .controls button {
+    background: var(--crimson);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-left: 8px;
+    cursor: pointer;
+  }
+  .controls button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .posts { display: flex; flex-direction: column; gap: 16px; }
+  .post-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .post-title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .post-caption { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .targets { display: flex; gap: 10px; flex-wrap: wrap; }
+  .target {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1e222b;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .target a { color: #6ea8fe; text-decoration: none; }
+  .target a:hover { text-decoration: underline; }
+  .target button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+  .target button:hover { border-color: var(--crimson); }
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+  .badge.real { background: #1a4d2e; color: #3fb950; }
+  .badge.demo { background: #3a3a1a; color: #d9a441; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.pending { background: #6b7280; }
+  .dot.publishing { background: #d9a441; animation: pulse 1s infinite; }
+  .dot.published { background: #3fb950; }
+  .dot.failed { background: #f85149; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .empty { color: var(--muted); font-size: 14px; padding: 40px 0; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>TV9 <span>Multi-Platform Publisher</span></h1>
+      <p style="color: var(--muted); font-size: 12px; margin: 4px 0 0;">
+        <span class="badge real">REAL</span> = actually published via the platform's API &nbsp;·&nbsp;
+        <span class="badge demo">DEMO</span> = simulated for demonstration purposes
+      </p>
+    </div>
+    <div class="controls">
+      <button class="secondary" onclick="callDemo('reset')">Reset</button>
+      <button class="secondary" onclick="callDemo('seed')">Seed Demo Data</button>
+      <button onclick="callDemo('simulate')">Advance Publishing (Demo)</button>
+    </div>
+  </header>
+
+  <div class="post-card" id="create-form" style="margin-bottom: 20px;">
+    <div class="post-title">Create a Real Post</div>
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+      <input id="cf-title" placeholder="Title" style="background:#1e222b;border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);" />
+      <input id="cf-caption" placeholder="Caption" style="background:#1e222b;border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);" />
+      <input id="cf-media" placeholder="Filename in /app/media/ (e.g. test_clip.mp4)" style="background:#1e222b;border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);" />
+      <select id="cf-account" style="background:#1e222b;border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);"></select>
+      <button onclick="createRealPost()" style="align-self:flex-start;">Create + Publish Now</button>
+    </div>
+  </div>
+
+  <div id="posts" class="posts"></div>
+
+  <script>
+    async function loadAccounts() {
+      const res = await fetch('/accounts/');
+      const accounts = await res.json();
+      const select = document.getElementById('cf-account');
+      const knownDemoNames = ['TV9 Main Channel', 'tv9official', 'TV9 Bharatvarsh', '@TV9Bharatvarsh'];
+      const sorted = [...accounts].sort((a, b) => {
+        const aFake = knownDemoNames.includes(a.account_name) ? 1 : 0;
+        const bFake = knownDemoNames.includes(b.account_name) ? 1 : 0;
+        return aFake - bFake; // real accounts (0) sort before fake ones (1)
+      });
+      select.innerHTML = sorted.map(a => {
+        const isFake = knownDemoNames.includes(a.account_name);
+        const label = isFake
+          ? `${a.platform.toUpperCase()} — ${a.account_name} (DEMO — will fail if published)`
+          : `${a.platform.toUpperCase()} — ${a.account_name} (real, connected)`;
+        return `<option value="${a.id}">${label}</option>`;
+      }).join('');
+    }
+
+    async function createRealPost() {
+      const title = document.getElementById('cf-title').value || 'Untitled';
+      const caption = document.getElementById('cf-caption').value || '';
+      const filename = document.getElementById('cf-media').value || 'test_clip.mp4';
+      const accountId = document.getElementById('cf-account').value;
+
+      const createRes = await fetch('/posts/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          caption,
+          media_s3_key: `/app/media/${filename}`,
+          media_type: 'video',
+          created_by: 'dashboard',
+          target_account_ids: [accountId],
+          scheduled_for: new Date().toISOString(),
+        }),
+      });
+      const post = await createRes.json();
+      const targetId = post.targets[0].id;
+      await fetch(`/posts/targets/${targetId}/publish-now`, { method: 'POST' });
+      fetchPosts();
+    }
+
+    loadAccounts();
+
+    async function fetchPosts() {
+      const res = await fetch('/posts/');
+      const posts = await res.json();
+      const container = document.getElementById('posts');
+
+      if (posts.length === 0) {
+        container.innerHTML = '<div class="empty">No posts yet — click "Seed Demo Data" to get started.</div>';
+        return;
+      }
+
+      container.innerHTML = posts.map(post => {
+        const isDemo = post.created_by === 'demo-seed';
+        return `
+        <div class="post-card">
+          <div class="post-title">
+            ${post.title || '(untitled)'}
+            <span class="badge ${isDemo ? 'demo' : 'real'}">${isDemo ? 'DEMO' : 'REAL'}</span>
+          </div>
+          <div class="post-caption">${post.caption || ''}</div>
+          <div class="targets">
+            ${post.targets.map(t => {
+              const youtubeLink = (!isDemo && t.platform === 'youtube' && t.status === 'published' && t.platform_post_id)
+                ? ` — <a href="https://www.youtube.com/watch?v=${t.platform_post_id}" target="_blank">Watch on YouTube</a>`
+                : '';
+              const publishBtn = (!isDemo && t.status === 'pending')
+                ? `<button onclick="publishReal('${t.id}')">Publish Now</button>`
+                : '';
+              return `
+              <div class="target">
+                <span class="dot ${t.status}"></span>
+                <strong>${(t.platform || '?').toUpperCase()}</strong> — ${t.status}${youtubeLink}${publishBtn}
+              </div>
+            `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    async function publishReal(targetId) {
+      await fetch(`/posts/targets/${targetId}/publish-now`, { method: 'POST' });
+      fetchPosts();
+    }
+
+    async function callDemo(action) {
+      await fetch(`/demo/${action}`, { method: 'POST' });
+      fetchPosts();
+    }
+
+    fetchPosts();
+    setInterval(fetchPosts, 2000); // auto-refresh every 2s during the demo
+  </script>
+</body>
+</html>

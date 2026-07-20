@@ -1,0 +1,145 @@
+# TV9 Multi-Platform Publisher — Full Project Briefing
+
+**Prepared by:** Parth
+**Status:** Foundation built, YouTube publishing proven end-to-end with a real live upload
+**Purpose:** Complete reference covering what this is, why it exists, why every major decision was made, what it costs, and what's left.
+
+---
+
+## 1. The Problem
+
+TV9 needs to publish content — video clips, articles, graphics — to YouTube, Instagram, Facebook, and X simultaneously, at a volume of roughly **70–100 posts per day**. Doing this manually, one platform at a time, doesn't scale to that volume. This project builds an internal system to solve that: create content once, publish everywhere, track the outcome per platform.
+
+---
+
+## 2. Why Build It Ourselves Instead of Buying a Tool
+
+Two paths existed: use an existing tool (Postiz, Buffer, Hootsuite, Ayrshare), or build a custom system TV9 owns outright.
+
+**We chose to build**, for reasons that hold up under scrutiny — not just preference:
+
+- **The unavoidable costs are identical either way.** X (Twitter) charges per post directly, regardless of what software calls its API. Buying a third-party tool would mean paying X's fees *and* a software subscription on top. Building it ourselves means paying only the platform fees.
+- **Full ownership.** No dependency on a vendor's roadmap, pricing changes, or the risk of that vendor shutting down or getting acquired.
+- **No data leaves TV9's infrastructure.** Post history, scheduling data, and account credentials stay on systems TV9 controls, not a third party's servers.
+- **Comparable timeline.** A solid MVP is achievable in weeks either way, once accounting for the mandatory Meta App Review process that applies regardless of which tool is used.
+
+**When third-party tools would have made more sense:** if TV9 needed something live *immediately* with zero engineering time available, a tool like Postiz (self-hosted, open source) would have been the faster near-term choice. That tradeoff was considered and explicitly deprioritized in favor of long-term ownership, since TV9 has engineering capacity to build this properly.
+
+---
+
+## 3. What We're Using, and Why Each Choice Was Made
+
+| Component | Choice | Why |
+|---|---|---|
+| **Backend framework** | FastAPI (Python) | Matches existing skillset from other TV9 projects (Prawah, Power BI automation); async-native, which matters for handling multiple platform API calls without blocking; auto-generates interactive API docs for free |
+| **Database** | PostgreSQL | Already used elsewhere at TV9; reliable, well-understood, strong support for the relational structure this needs (one post → many platform-specific outcomes) |
+| **Local development** | Docker + Docker Compose | Makes the exact same environment reproducible on any machine, and mirrors how it will run in production (containers), avoiding "works on my machine" problems |
+| **Migrations** | Alembic | Standard pairing with SQLAlchemy/Postgres; every schema change is version-controlled and reversible, not applied ad hoc |
+| **Planned cloud platform** | AWS (ECS Fargate, RDS, S3, SQS, EventBridge Scheduler, Secrets Manager) | Matches TV9's existing cloud provider; ECS Fargate specifically chosen over raw EC2 (avoids server patching/maintenance for a solo engineer) and over Lambda (video uploads don't fit Lambda's 15-minute execution limit) |
+| **Secrets storage** | Local file (dev) → AWS Secrets Manager (production) | OAuth tokens are never stored in the database directly — the database only stores a *pointer* to where the real credential lives. This is a deliberate security boundary, not a shortcut |
+
+---
+
+## 4. The Data Model — Why It's Shaped This Way
+
+Every post can target multiple platforms, and each platform's outcome is tracked **independently**:
+
+- `posts` — the content itself (title, caption, media file), created once
+- `social_accounts` — connected accounts per platform, with a pointer (not the raw secret) to where credentials live
+- `post_targets` — one row per (post × platform), tracking status (`pending → publishing → published`/`failed`) separately for each
+
+**Why this matters practically:** if a post to X fails but YouTube and Instagram succeed, only the X row needs retrying. Nothing else is affected, and nothing has to be re-published. This was proven directly during testing — failures on one platform never blocked or corrupted the others.
+
+---
+
+## 5. Real Cost Breakdown (at 70–100 posts/day)
+
+| Cost item | Amount | Notes |
+|---|---|---|
+| YouTube Data API | **$0** | Free; quota-based, 6 free uploads/day before a free quota increase request is needed |
+| Instagram + Facebook Graph API | **$0** | Free to call; Instagram caps at 100 API-published posts/24hr per account — worth monitoring as volume grows |
+| X (Twitter) API | **~$90–180/month** | Pay-per-post: $0.015 plain text, $0.20 if the post contains a link (TV9 content will mostly include links back to articles/videos) |
+| AWS hosting (once deployed) | **~$65–95/month** | ECS Fargate, managed Postgres (RDS), S3, Secrets Manager — all fully managed to minimize ongoing ops work |
+| **Third-party alternative, for comparison** | **$0–99/month extra** | What a hosted tool like Postiz Cloud or Ayrshare would have cost *in addition to* the X fees above |
+
+**The X API fee is the dominant, unavoidable cost regardless of which path was chosen.** The build-vs-buy decision affected engineering time and long-term ownership — not this line item.
+
+---
+
+## 6. What's Proven Working Right Now
+
+This is not a mockup or a simulation — the following has been demonstrated end-to-end with real systems:
+
+- **Real OAuth login flow** — authenticates against Google's actual servers, stores tokens securely, refreshes them automatically before they expire
+- **A real video upload** — a test video was uploaded through this exact pipeline directly to YouTube's Data API v3, and is sitting on the connected YouTube channel right now (as a private upload, deliberately, during testing)
+- **Failure handling that doesn't fail silently** — every possible failure point (expired token, missing file, API error, unexpected exception) is caught and recorded with a clear reason, never a blank crash
+- **A working visual dashboard** at `/dashboard` that clearly distinguishes real published content from demo/simulated data, with a live "Create + Publish Now" flow that can trigger a genuine publish directly from the browser
+- **Safety guardrails added during testing** — for example, the demo "reset" function was found and fixed to never delete real connected accounts, only simulated test data
+
+---
+
+## 7. What's Left
+
+| Platform | Status |
+|---|---|
+| YouTube | ✅ Done — real uploads confirmed working |
+| Instagram | Not started — same adapter pattern as YouTube, next in line |
+| Facebook | Not started — shares the same Meta Developer App/review as Instagram |
+| X | Not started |
+| AWS production deployment | Architecture fully designed, not yet deployed (currently running in local Docker) |
+
+**Estimated remaining timeline:** ~3–4 weeks for the remaining three platform adapters plus AWS deployment, run in parallel with Meta's App Review process (1–4 weeks, should be started as early as possible since it doesn't block other development work).
+
+---
+
+## 8. How It Was Built — Development Approach
+
+- **One platform at a time, proven real before moving on.** Rather than building all four adapters against a hope they'd work, YouTube was built first and pushed to a genuine successful publish before any further platform work started — de-risking the hardest, least certain part of the project early.
+- **Local-first development.** Everything currently runs in Docker locally, matching the eventual AWS architecture closely enough that migrating to production is a deployment change, not a rewrite.
+- **Defensive engineering learned from real debugging.** Several real issues were found and fixed during testing — silent failures were made loud and traceable, a database-wiping bug in a "reset" utility was caught and scoped safely, and account-selection UI was hardened to prevent accidentally publishing to the wrong (fake) account during a live demo. These weren't hypothetical risks — they were things that actually happened during development and were fixed before they could cause a real problem.
+
+---
+
+## 9. Live Demo Script
+
+**Opening line:**
+> "This is an internal system so TV9 can publish content to YouTube, Instagram, Facebook, and X all at once instead of uploading manually to each. I want to show you it's not a mockup — it actually publishes, live."
+
+**Step 1 — Show the dashboard.**
+> "This is the live dashboard. Every post shows its status per platform in real time, and it's clearly labeled whether something is a real publish or simulated demo data — so there's never ambiguity about what's actually live."
+
+**Step 2 — Create a real post live.**
+- Fill in the "Create a Real Post" form (title, caption, test video filename), confirm the real account is selected (it's the default now).
+- Click **"Create + Publish Now"**.
+> "I'm creating a real post right now and publishing it live — this is making an actual call to YouTube's API as we speak."
+
+**Step 3 — Watch it complete.**
+> "You can see the status move from pending to publishing to published in real time."
+
+**Step 4 — Click "Watch on YouTube."**
+> "This opens the actual video that was just uploaded through our pipeline. It's private for testing purposes, but the upload itself is entirely real."
+
+**If asked "why isn't this live for all 4 platforms yet?":**
+> "YouTube was the fastest because its login process doesn't require external review. Instagram and Facebook need a security review from Meta that takes 1–4 weeks regardless of who's doing the integration — we're starting that in parallel so it doesn't block progress on X and the AWS deployment."
+
+**If asked about cost:**
+> "The main ongoing cost is X's API, which charges per post no matter what tool is used — that's true whether we built this ourselves or bought a third-party tool. Building it ourselves means no extra software subscription on top, and TV9 owns the system outright."
+
+**If asked "could we have just bought something and been done already?":**
+> "Yes, for a faster initial launch. But that would mean an ongoing subscription on top of the same unavoidable platform fees, plus TV9's data and workflow living on a third party's infrastructure. Given we have engineering time available, owning this outright was the better long-term call."
+
+---
+
+## 10. Anticipated Questions
+
+**"What happens if this breaks in production?"**
+Every platform call is wrapped in error handling that records exactly what failed and why. Nothing is a black box — any TV9 engineer can read the failure reason directly from the dashboard or database, rather than guessing.
+
+**"Is this secure?"**
+OAuth tokens are never stored in the main database — only a reference to where the real credential lives. Locally that's a local file for development; in production it moves to AWS Secrets Manager, meaning credentials are never exposed in code, logs, or the database itself.
+
+**"What's the realistic timeline to have all 4 platforms live in production?"**
+Roughly 3–4 more weeks of development (Instagram, Facebook, X adapters), run in parallel with Meta's review process, followed by AWS deployment and end-to-end testing.
+
+**"Why not just use ChatGPT/AI to build the platforms' apps for us instantly?"**
+Every platform (YouTube, Meta, X) requires manual developer registration, security review, and credential setup that only TV9 (as the account owner) can complete — no engineering approach skips this. What's been accelerated is the code itself, not the platform-side approval process.
