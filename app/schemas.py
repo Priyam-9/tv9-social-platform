@@ -10,6 +10,22 @@ class SocialAccountCreate(BaseModel):
     secrets_manager_arn: str
 
 
+class UserCreate(BaseModel):
+    email: str
+    display_name: str
+    is_admin: bool = False
+
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    email: str
+    display_name: str
+    is_admin: bool
+    created_at: datetime
+
+
 class SocialAccountOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

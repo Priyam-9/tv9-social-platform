@@ -15,8 +15,9 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models
+from app.dependencies import verify_api_key
 
-router = APIRouter(prefix="/demo", tags=["demo"])
+router = APIRouter(prefix="/demo", tags=["demo"], dependencies=[Depends(verify_api_key)])
 
 DEMO_PLATFORMS = [
     ("youtube", "TV9 Main Channel"),
@@ -125,9 +126,25 @@ def simulate_publish(db: Session = Depends(get_db)):
 
 @router.post("/reset")
 def reset_demo(db: Session = Depends(get_db)):
-    """Wipes demo data so you can re-run the demo cleanly."""
-    db.query(models.PostTarget).delete()
-    db.query(models.Post).delete()
-    db.query(models.SocialAccount).delete()
+    """
+    Wipes ONLY demo-seeded data — posts created by seed_demo() and
+    accounts using the placeholder secret. Real connected accounts
+    (like an actual OAuth-connected YouTube channel) and real posts
+    created through the dashboard form are never touched by this,
+    no matter how many times it's run.
+    """
+    demo_post_ids = [
+        p.id for p in db.query(models.Post).filter(models.Post.created_by == "demo-seed").all()
+    ]
+    if demo_post_ids:
+        db.query(models.PostTarget).filter(
+            models.PostTarget.post_id.in_(demo_post_ids)
+        ).delete(synchronize_session=False)
+        db.query(models.Post).filter(models.Post.id.in_(demo_post_ids)).delete(synchronize_session=False)
+
+    db.query(models.SocialAccount).filter(
+        models.SocialAccount.secrets_manager_arn == "demo-placeholder"
+    ).delete(synchronize_session=False)
+
     db.commit()
-    return {"status": "reset"}
+    return {"status": "reset (demo data only — real accounts and real posts are preserved)"}

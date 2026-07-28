@@ -26,9 +26,12 @@ class Settings(BaseSettings):
     x_client_id: str = ""
     x_client_secret: str = ""
 
-    # Where local dev stores OAuth tokens. In AWS this is replaced by
-    # Secrets Manager — see app/services/secrets_service.py.
+    # Local dev secrets storage path (used by secrets_service)
     local_secrets_path: str = "/app/.local_secrets.json"
+
+    # API authentication — required on every non-public endpoint. Set a
+    # real random value in .env; never leave this blank outside local dev.
+    api_access_key: str = ""
 
 
 settings = Settings()

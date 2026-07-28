@@ -6,6 +6,7 @@ download the object from S3 to a temp path first — the publish()
 signature won't need to change.
 """
 
+import asyncio
 import os
 
 from google.auth.transport.requests import Request as GoogleAuthRequest
@@ -47,17 +48,16 @@ class YouTubeAdapter(PlatformAdapter):
                 },
             )
 
-    async def publish(self, post: Post, account: SocialAccount) -> PublishResult:
-        if not post.media_s3_key:
-            raise PublishError("Post has no media file — YouTube requires a video file")
-
-        local_path = post.media_s3_key  # local dev: treated as a direct file path
-        if not os.path.exists(local_path):
-            raise PublishError(f"Video file not found at {local_path}")
-
-        await self.refresh_token_if_needed(account)
-        creds = self._get_credentials(account)
-        youtube = build("youtube", "v3", credentials=creds)
+    def _upload_blocking(self, local_path: str, credentials: Credentials, post: Post) -> dict:
+        """
+        The actual upload. The Google API client's upload calls
+        (request.next_chunk()) are synchronous/blocking — there's no
+        native async version. Running this via asyncio.to_thread (see
+        publish() below) is what lets several of these run at the same
+        time (e.g. uploading to 3 different YouTube channels at once)
+        without one upload blocking the others on the same event loop.
+        """
+        youtube = build("youtube", "v3", credentials=credentials)
 
         body = {
             "snippet": {
@@ -71,12 +71,24 @@ class YouTubeAdapter(PlatformAdapter):
         }
 
         media = MediaFileUpload(local_path, chunksize=-1, resumable=True)
+        request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+        response = None
+        while response is None:
+            status, response = request.next_chunk()
+        return response
+
+    async def publish(self, post: Post, account: SocialAccount) -> PublishResult:
+        if not post.media_s3_key:
+            raise PublishError("Post has no media file — YouTube requires a video file")
+
+        local_path = post.media_s3_key  # local dev: treated as a direct file path
+        if not os.path.exists(local_path):
+            raise PublishError(f"Video file not found at {local_path}")
 
         try:
-            request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
-            response = None
-            while response is None:
-                status, response = request.next_chunk()
+            await self.refresh_token_if_needed(account)
+            creds = self._get_credentials(account)
+            response = await asyncio.to_thread(self._upload_blocking, local_path, creds, post)
             return PublishResult(platform_post_id=response["id"])
         except Exception as e:  # noqa: BLE001 — surfacing any upload failure as PublishError
-            raise PublishError(f"YouTube upload failed: {e}") from e
+            raise PublishError(f"YouTube upload failed: {type(e).__name__}: {e}") from e

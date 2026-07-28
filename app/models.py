@@ -8,6 +8,47 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
+class User(Base):
+    """
+    A person who uses the dashboard. Access is scoped by which
+    social_accounts they're explicitly granted (see UserAccountAccess) —
+    an Admin isn't a fundamentally different code path, just a user
+    with is_admin=True, which grants visibility into every account
+    without needing individual grants for each one (important
+    practically: when a new YouTube channel is connected later, admins
+    should see it immediately, not need re-granting one by one).
+    """
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    account_access: Mapped[list["UserAccountAccess"]] = relationship(back_populates="user")
+
+
+class UserAccountAccess(Base):
+    """
+    Grants one user access to one social_account. A Content Manager
+    responsible for a single YouTube channel has exactly one row here;
+    someone managing several channels has one row per channel. Admins
+    don't need rows here at all — is_admin=True on the User already
+    grants everything.
+    """
+
+    __tablename__ = "user_account_access"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    social_account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("social_accounts.id"), nullable=False)
+
+    user: Mapped["User"] = relationship(back_populates="account_access")
+    social_account: Mapped["SocialAccount"] = relationship()
+
+
 class SocialAccount(Base):
     """
     One row per connected platform account (e.g. TV9's YouTube channel,

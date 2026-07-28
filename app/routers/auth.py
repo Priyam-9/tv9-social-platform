@@ -1,6 +1,6 @@
 """
 Handles the browser-based OAuth flow for connecting a real YouTube
-account. Visit /auth/youtube/login to start it — Google will redirect
+account. Visit /auth/youtube/login to start it, Google will redirect
 back to /auth/youtube/callback once the user approves access, at which
 point we exchange the code for tokens, look up the channel, and store
 (or update) the SocialAccount row.
@@ -12,13 +12,13 @@ from app.config import settings
 
 # google-auth-oauthlib refuses non-HTTPS redirect URIs by default. Our
 # local dev callback is http://localhost:8000/... (no TLS), so we have
-# to explicitly allow "insecure" transport — ONLY ever do this in local
+# to explicitly allow "insecure" transport - ONLY ever do this in local
 # dev. In AWS, the ALB terminates real HTTPS and this flag must NOT be
 # set, since it would allow token exchange over plain HTTP in production.
 if settings.environment == "local":
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
     # Google sometimes returns scopes in a different order/format than
-    # requested — without this, the library treats that as an error.
+    # requested - without this, the library treats that as an error.
     os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
 from fastapi import APIRouter, Depends, HTTPException, Request
