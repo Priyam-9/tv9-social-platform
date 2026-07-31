@@ -83,7 +83,7 @@
         border-radius: 50%;
         background: var(--crimson);
         box-shadow: 0 0 0 0 var(--crimson-glow);
-        animation: livepulse 0.8s infinite;
+        animation: livepulse 1.8s infinite;
         flex-shrink: 0;
       }
       @keyframes livepulse {
@@ -524,6 +524,171 @@
         background: var(--red);
       }
 
+      /* ---------- YouTube channel strip ---------- */
+      .yt-strip {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+      }
+      .yt-strip .yt-strip-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10.5px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        white-space: nowrap;
+      }
+      .yt-chip {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: linear-gradient(180deg, #1a1416, #14100f);
+        border: 1px solid rgba(255, 0, 51, 0.25);
+        border-radius: 20px;
+        padding: 6px 12px 6px 8px;
+        font-size: 12.5px;
+        transition: border-color 0.2s ease, transform 0.15s ease;
+      }
+      .yt-chip:hover {
+        border-color: rgba(255, 0, 51, 0.5);
+        transform: translateY(-1px);
+      }
+      .yt-chip svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      .yt-chip .yt-chip-name {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .yt-chip .yt-chip-live {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+        animation: livepulse 1.8s infinite;
+        margin-left: 2px;
+      }
+      .yt-empty {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11.5px;
+        color: var(--dim);
+      }
+
+      /* ---------- YouTube target enhancements ---------- */
+      .target.yt-target {
+        border-color: rgba(255, 0, 51, 0.18);
+        max-width: 340px;
+      }
+      .target.yt-target:hover {
+        border-color: rgba(255, 0, 51, 0.4);
+      }
+      .target-attempts {
+        color: var(--dim);
+        font-size: 10px;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .yt-progress-track {
+        width: 100%;
+        height: 3px;
+        background: #262a33;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 2px;
+      }
+      .yt-progress-fill {
+        height: 100%;
+        width: 40%;
+        background: linear-gradient(90deg, var(--amber), #ff6b6b);
+        border-radius: 2px;
+        animation: ytupload 1.2s ease-in-out infinite;
+      }
+      @keyframes ytupload {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(250%); }
+      }
+
+      .yt-embed-wrap {
+        margin-top: 8px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border-soft);
+        aspect-ratio: 16 / 9;
+        max-width: 300px;
+      }
+      .yt-embed-wrap iframe {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border: none;
+      }
+
+      .retry-btn {
+        border-color: var(--amber) !important;
+        color: var(--amber) !important;
+      }
+      .retry-btn:hover {
+        background: rgba(251, 191, 36, 0.1) !important;
+      }
+
+      /* ---------- KPI strip ---------- */
+      .kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+      .kpi-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        transition: border-color 0.2s ease, transform 0.15s ease;
+      }
+      .kpi-card:hover {
+        transform: translateY(-1px);
+        border-color: #2e3340;
+      }
+      .kpi-value {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 800;
+        font-size: 28px;
+        line-height: 1;
+      }
+      .kpi-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .kpi-card.total .kpi-value { color: var(--text); }
+      .kpi-card.published .kpi-value { color: var(--green); }
+      .kpi-card.pending .kpi-value { color: var(--muted); }
+      .kpi-card.failed .kpi-value { color: var(--red); }
+      @media (max-width: 640px) {
+        .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      .delete-btn {
+        background: transparent !important;
+        border: 1px solid var(--border) !important;
+        color: var(--dim) !important;
+      }
+      .delete-btn:hover {
+        border-color: var(--red) !important;
+        color: var(--red) !important;
+        background: rgba(248, 113, 113, 0.08) !important;
+      }
+
       .empty {
         color: var(--dim);
         font-size: 13px;
@@ -603,6 +768,32 @@
       </div>
     </div>
 
+    <div class="yt-strip">
+      <span class="yt-strip-label">YouTube channels</span>
+      <div id="yt-channel-list" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <span class="yt-empty">Loading…</span>
+      </div>
+    </div>
+
+    <div id="kpi-strip" class="kpi-strip">
+      <div class="kpi-card total">
+        <span class="kpi-value" id="kpi-total">–</span>
+        <span class="kpi-label">Total posts</span>
+      </div>
+      <div class="kpi-card published">
+        <span class="kpi-value" id="kpi-published">–</span>
+        <span class="kpi-label">Published</span>
+      </div>
+      <div class="kpi-card pending">
+        <span class="kpi-value" id="kpi-pending">–</span>
+        <span class="kpi-label">Pending</span>
+      </div>
+      <div class="kpi-card failed">
+        <span class="kpi-value" id="kpi-failed">–</span>
+        <span class="kpi-label">Failed</span>
+      </div>
+    </div>
+
     <div class="rundown-head">
       <span class="eyebrow">Today's rundown</span>
       <span class="line"></span>
@@ -661,9 +852,39 @@
 
       async function onUserChange() {
         CURRENT_USER_EMAIL = document.getElementById("user-switcher").value;
+        LAST_POSTS_SNAPSHOT = null; // force a fresh render for the new user/role
         updateRoleBadge();
         await loadAccounts();
+        await loadYoutubeChannels();
         await fetchPosts();
+      }
+
+      const YT_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.5 6.2s-.2-1.6-.9-2.3c-.9-.9-1.9-.9-2.3-1C17.3 2.6 12 2.6 12 2.6h0s-5.3 0-8.3.3c-.4 0-1.4.1-2.3 1-.7.7-.9 2.3-.9 2.3S.2 8.1.2 10v1.9c0 1.9.2 3.8.2 3.8s.2 1.6.9 2.3c.9.9 2 .9 2.5 1 1.8.2 7.7.3 7.7.3s5.3 0 8.3-.3c.4 0 1.4-.1 2.3-1 .7-.7.9-2.3.9-2.3s.2-1.9.2-3.8V10c0-1.9-.2-3.8-.2-3.8z" fill="#FF0033"/><path d="M9.6 14.1V7.9l6 3.1-6 3.1z" fill="#fff"/></svg>`;
+
+      let ALL_ACCOUNTS_CACHE = [];
+
+      async function loadYoutubeChannels() {
+        const res = await authedFetch("/accounts/");
+        const accounts = res.ok ? await res.json() : [];
+        ALL_ACCOUNTS_CACHE = accounts;
+        const ytAccounts = accounts.filter((a) => a.platform === "youtube");
+        const list = document.getElementById("yt-channel-list");
+        if (ytAccounts.length === 0) {
+          list.innerHTML =
+            '<span class="yt-empty">No YouTube channels visible to this user.</span>';
+          return;
+        }
+        list.innerHTML = ytAccounts
+          .map(
+            (a) => `
+          <div class="yt-chip">
+            ${YT_ICON}
+            <span class="yt-chip-name">${a.account_name}</span>
+            <span class="yt-chip-live" title="Connected"></span>
+          </div>
+        `,
+          )
+          .join("");
       }
 
       async function loadAccounts() {
@@ -735,6 +956,7 @@
             method: "POST",
           });
         }
+        LAST_POSTS_SNAPSHOT = null; // force render since we know something changed
         fetchPosts();
       }
 
@@ -742,27 +964,79 @@
         await authedFetch(`/posts/targets/${targetId}/publish-now`, {
           method: "POST",
         });
+        LAST_POSTS_SNAPSHOT = null;
         fetchPosts();
       }
 
       async function publishAll(postId) {
         await authedFetch(`/posts/${postId}/publish-all`, { method: "POST" });
+        LAST_POSTS_SNAPSHOT = null;
         fetchPosts();
       }
 
       async function callDemo(action) {
         await authedFetch(`/demo/${action}`, { method: "POST" });
+        LAST_POSTS_SNAPSHOT = null;
+        await loadYoutubeChannels();
         fetchPosts();
+      }
+
+      async function retryPublish(targetId) {
+        LAST_POSTS_SNAPSHOT = null;
+        await publishReal(targetId);
       }
 
       function segNumber(i) {
         return String(i + 1).padStart(2, "0");
       }
 
+      // ---------- Flicker fix ----------
+      // Previously, fetchPosts() rebuilt the entire #posts innerHTML every
+      // 2 seconds unconditionally, even when the data hadn't changed. Every
+      // .post-card has a CSS entrance animation (fadein), so rebuilding the
+      // DOM every 2s re-triggered that animation constantly, producing the
+      // "coming in and out" flicker. Fix: keep a snapshot of the last
+      // rendered data and skip the re-render entirely if nothing changed.
+      function updateKpiStrip(posts) {
+        let published = 0, pending = 0, failed = 0;
+        posts.forEach((post) => {
+          post.targets.forEach((t) => {
+            if (t.status === "published") published++;
+            else if (t.status === "failed") failed++;
+            else pending++; // pending or publishing counted as in-progress
+          });
+        });
+        document.getElementById("kpi-total").textContent = posts.length;
+        document.getElementById("kpi-published").textContent = published;
+        document.getElementById("kpi-pending").textContent = pending;
+        document.getElementById("kpi-failed").textContent = failed;
+      }
+
+      async function deletePost(postId) {
+        if (!confirm("Delete this post? This can't be undone.")) return;
+        const res = await authedFetch(`/posts/${postId}`, { method: "DELETE" });
+        if (!res.ok && res.status !== 204) {
+          const err = await res.json().catch(() => ({}));
+          alert("Could not delete post: " + (err.detail || res.status));
+          return;
+        }
+        LAST_POSTS_SNAPSHOT = null;
+        fetchPosts();
+      }
+
+      let LAST_POSTS_SNAPSHOT = null;
+
       async function fetchPosts() {
         const res = await authedFetch("/posts/");
         if (!res.ok) return;
         const posts = await res.json();
+
+        updateKpiStrip(posts); // always keep KPIs live, independent of the render-skip below
+
+        const snapshot = JSON.stringify(posts);
+        if (snapshot === LAST_POSTS_SNAPSHOT) return; // nothing changed — skip render
+        LAST_POSTS_SNAPSHOT = snapshot;
+
         const container = document.getElementById("posts");
 
         if (posts.length === 0) {
@@ -786,34 +1060,68 @@
                 ${post.title || "(untitled)"}
                 <span class="badge ${isDemo ? "demo" : "real"}">${isDemo ? "Demo" : "Real"}</span>
               </div>
-              ${!isDemo && pendingCount > 1 ? `<button class="publish-all-btn" onclick="publishAll('${post.id}')">Publish all ${pendingCount} now</button>` : ""}
+              <div style="display:flex; gap:8px; align-items:center;">
+                ${!isDemo && pendingCount > 1 ? `<button class="publish-all-btn" onclick="publishAll('${post.id}')">Publish all ${pendingCount} now</button>` : ""}
+                <button class="secondary delete-btn" onclick="deletePost('${post.id}')" title="Delete this post">Delete</button>
+              </div>
             </div>
             <div class="post-caption">${post.caption || ""}</div>
             <div class="targets">
               ${post.targets
                 .map((t) => {
-                  const youtubeLink =
-                    t.platform === "youtube" &&
-                    t.status === "published" &&
-                    t.platform_post_id
-                      ? ` — <a href="https://www.youtube.com/watch?v=${t.platform_post_id}" target="_blank">Watch on YouTube</a>`
-                      : "";
+                  const isYoutube = t.platform === "youtube";
+
                   const publishBtn =
                     !isDemo && t.status === "pending"
                       ? `<button onclick="publishReal('${t.id}')">Publish now</button>`
                       : "";
+
+                  const retryBtn =
+                    !isDemo && t.status === "failed" && isYoutube
+                      ? `<button class="retry-btn" onclick="retryPublish('${t.id}')">Retry</button>`
+                      : "";
+
                   const errorLine = t.error_message
                     ? `<div class="target-error">${t.error_message}</div>`
                     : "";
+
+                  const attemptsLine =
+                    t.attempts > 0
+                      ? `<div class="target-attempts">attempts: ${t.attempts}</div>`
+                      : "";
+
+                  // While a YouTube upload is in flight, show a moving
+                  // progress bar instead of just the pulsing dot — much
+                  // clearer in a live demo that real work is happening.
+                  const progressBar =
+                    isYoutube && t.status === "publishing"
+                      ? `<div class="yt-progress-track"><div class="yt-progress-fill"></div></div>`
+                      : "";
+
+                  // Real inline video playback for published YouTube
+                  // targets, instead of just a text link out.
+                  const ytEmbed =
+                    isYoutube && t.status === "published" && t.platform_post_id
+                      ? `<div class="yt-embed-wrap">
+                           <iframe src="https://www.youtube-nocookie.com/embed/${t.platform_post_id}"
+                             title="YouTube video player" frameborder="0"
+                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                             allowfullscreen loading="lazy"></iframe>
+                         </div>`
+                      : "";
+
                   return `
-                <div class="target">
+                <div class="target ${isYoutube ? "yt-target" : ""}">
                   <div class="target-main">
                     <span class="dot ${t.status}"></span>
                     <strong>${(t.platform || "?").toUpperCase()}</strong>
                     <span class="target-status">${t.status}</span>
-                    ${youtubeLink}${publishBtn}
+                    ${publishBtn}${retryBtn}
                   </div>
+                  ${progressBar}
                   ${errorLine}
+                  ${attemptsLine}
+                  ${ytEmbed}
                 </div>
               `;
                 })
@@ -829,6 +1137,7 @@
       initAuth().then(async () => {
         await loadUserSwitcher();
         await loadAccounts();
+        await loadYoutubeChannels();
         fetchPosts();
         setInterval(fetchPosts, 2000); // auto-refresh every 2s during the demo
       });

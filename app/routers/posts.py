@@ -85,17 +85,44 @@ def create_post(
 
 
 @router.get("/", response_model=list[schemas.PostOut])
-def list_posts(db: Session = Depends(get_db)):
+def list_posts(
+    db: Session = Depends(get_db),
+    current_user: models.User | None = Depends(get_current_user),
+):
+    """
+    THE FIX: this previously ignored current_user entirely and returned
+    every post to every caller — that's why switching "Viewing as" on the
+    dashboard changed the accounts dropdown but never changed the posts
+    list. Now it mirrors the exact same pattern accounts.py already uses:
+    get_accessible_account_ids() returns None for unrestricted/admin
+    callers, or a concrete set of account IDs for a scoped user. A post
+    is visible to a scoped user if AT LEAST ONE of its targets points at
+    an account they're allowed to see.
+    """
+    accessible = get_accessible_account_ids(current_user, db)
+
+    query = db.query(models.Post).options(
+        joinedload(models.Post.targets).joinedload(models.PostTarget.social_account)
+    )
+
+    if accessible is not None:  # None means "no restriction" — same convention as accounts.py
+        query = query.join(models.PostTarget).filter(
+            models.PostTarget.social_account_id.in_(accessible)
+        )
+
     return (
-        db.query(models.Post)
-        .options(joinedload(models.Post.targets).joinedload(models.PostTarget.social_account))
-        .order_by(models.Post.created_at.desc())
-        .all()
+        query.order_by(models.Post.created_at.desc())
+        .distinct()  # the join above can duplicate a Post row if it has
+        .all()       # multiple targets that match the filter — collapse those
     )
 
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
-def get_post(post_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_post(
+    post_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: models.User | None = Depends(get_current_user),
+):
     post = (
         db.query(models.Post)
         .options(joinedload(models.Post.targets).joinedload(models.PostTarget.social_account))
@@ -104,7 +131,41 @@ def get_post(post_id: uuid.UUID, db: Session = Depends(get_db)):
     )
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    accessible = get_accessible_account_ids(current_user, db)
+    if accessible is not None:
+        target_account_ids = {t.social_account_id for t in post.targets}
+        if not target_account_ids & set(accessible):
+            raise HTTPException(status_code=404, detail="Post not found")
+
     return post
+
+
+@router.delete("/{post_id}", status_code=204)
+def delete_post(
+    post_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: models.User | None = Depends(get_current_user),
+):
+    """
+    Lets the dashboard clean up clutter/demo posts directly instead of
+    only via /demo/reset. Same access rule as everywhere else: a scoped
+    user can only delete a post if they have access to at least one of
+    its target accounts; admins/unrestricted callers can delete anything.
+    """
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    accessible = get_accessible_account_ids(current_user, db)
+    if accessible is not None:
+        target_account_ids = {t.social_account_id for t in post.targets}
+        if not target_account_ids & set(accessible):
+            raise HTTPException(status_code=403, detail="You don't have access to this post")
+
+    db.delete(post)
+    db.commit()
+    return None
 
 
 async def _execute_publish(target: models.PostTarget, client_ip: str) -> dict:
