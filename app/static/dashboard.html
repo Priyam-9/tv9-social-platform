@@ -6,7 +6,7 @@
     <title>TV9 — Broadcast Rundown</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Noto+Sans+Telugu:wght@400;600&family=Noto+Sans+Tamil:wght@400;600&family=Noto+Sans+Kannada:wght@400;600&family=Noto+Sans+Malayalam:wght@400;600&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -279,6 +279,14 @@
         color: var(--muted);
         margin-bottom: 12px;
       }
+      .panel-subtitle {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10.5px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 6px 0 2px;
+      }
       .panel-fields {
         display: flex;
         flex-direction: column;
@@ -290,6 +298,140 @@
       .panel-fields button {
         align-self: flex-start;
         margin-top: 4px;
+      }
+
+      /* ---------- Per-target selection cards (language + overrides) ---------- */
+      /* Check an account -> its language + native-script fields expand
+         underneath it. Unchecked accounts stay collapsed to a single row,
+         so you're not staring at 8 language dropdowns and 16 text boxes
+         for accounts you're not even publishing to. */
+      .target-select-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .target-card {
+        background: #171a20;
+        border: 1px solid var(--border-soft);
+        border-radius: 8px;
+        padding: 10px 12px;
+        transition: border-color 0.15s ease;
+      }
+      .target-card.expanded {
+        border-color: var(--blue);
+      }
+      .target-card-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .target-card-head input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--crimson);
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .target-card-head .account-label {
+        flex: 1;
+        min-width: 160px;
+        font-size: 13px;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .target-card-head select.cf-target-lang {
+        width: 170px;
+        padding: 7px 9px;
+        font-size: 12px;
+      }
+      .target-card-body {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border-soft);
+        flex-direction: column;
+        gap: 10px;
+      }
+      .target-card-body .field-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .target-card-body label.field-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9.5px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .target-card-body textarea {
+        width: 100%;
+        min-height: 56px;
+        resize: vertical;
+        font-size: 14.5px;
+        line-height: 1.55;
+        padding: 9px 11px;
+        border-radius: 6px;
+        background: #1a1e25;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: inherit;
+      }
+      .target-card-body textarea:focus {
+        border-color: var(--crimson);
+        outline: none;
+        box-shadow: 0 0 0 3px var(--crimson-glow);
+      }
+      .lang-tag {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9.5px;
+        color: var(--blue);
+        background: rgba(110, 168, 254, 0.1);
+        border: 1px solid rgba(110, 168, 254, 0.25);
+        padding: 1px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        margin-left: 6px;
+      }
+
+      /* Correct script rendering wherever native-language text appears
+         (inputs, textareas, or the read-only display on post cards) —
+         the base font stack has no Indic glyphs, so without this,
+         typed/published Hindi/Telugu/etc. text shows as tofu boxes. */
+      [lang="hi"],
+      [lang="mr"] {
+        font-family: "Noto Sans Devanagari", "Inter", sans-serif;
+      }
+      [lang="bn"] {
+        font-family: "Noto Sans Bengali", "Inter", sans-serif;
+      }
+      [lang="te"] {
+        font-family: "Noto Sans Telugu", "Inter", sans-serif;
+      }
+      [lang="ta"] {
+        font-family: "Noto Sans Tamil", "Inter", sans-serif;
+      }
+      [lang="kn"] {
+        font-family: "Noto Sans Kannada", "Inter", sans-serif;
+      }
+      [lang="ml"] {
+        font-family: "Noto Sans Malayalam", "Inter", sans-serif;
+      }
+
+      .target-override {
+        margin-top: 6px;
+      }
+      .target-override-title {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.45;
+      }
+      .target-override-caption {
+        font-size: 11.5px;
+        color: var(--muted);
+        margin-top: 2px;
+        line-height: 1.45;
       }
 
       /* ---------- Rundown ---------- */
@@ -310,6 +452,10 @@
         flex: 1;
         height: 1px;
         background: var(--border-soft);
+      }
+      .rundown-head select {
+        padding: 6px 10px;
+        font-size: 12px;
       }
 
       .posts {
@@ -579,6 +725,52 @@
         color: var(--dim);
       }
 
+      /* ---------- OAuth expiry warning ---------- */
+      .yt-chip.warning {
+        border-color: rgba(251, 191, 36, 0.5);
+      }
+      .yt-chip.expired {
+        border-color: rgba(248, 113, 113, 0.6);
+      }
+      .yt-chip-expiry {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9.5px;
+        margin-left: 4px;
+      }
+      .yt-chip-expiry.warning {
+        color: var(--amber);
+      }
+      .yt-chip-expiry.expired {
+        color: var(--red);
+      }
+      .yt-chip-reconnect {
+        font-size: 9.5px;
+        color: var(--blue);
+        text-decoration: none;
+        margin-left: 4px;
+        white-space: nowrap;
+      }
+      .yt-chip-reconnect:hover {
+        text-decoration: underline;
+      }
+      #oauth-warning-banner {
+        background: rgba(248, 113, 113, 0.08);
+        border: 1px solid rgba(248, 113, 113, 0.3);
+        border-radius: var(--radius);
+        padding: 10px 16px;
+        margin-top: -12px;
+        margin-bottom: 22px;
+        font-size: 12.5px;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      #oauth-warning-banner a {
+        color: var(--blue);
+      }
+
       /* ---------- YouTube target enhancements ---------- */
       .target.yt-target {
         border-color: rgba(255, 0, 51, 0.18);
@@ -609,8 +801,12 @@
         animation: ytupload 1.2s ease-in-out infinite;
       }
       @keyframes ytupload {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(250%); }
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(250%);
+        }
       }
 
       .yt-embed-wrap {
@@ -670,12 +866,22 @@
         text-transform: uppercase;
         letter-spacing: 0.8px;
       }
-      .kpi-card.total .kpi-value { color: var(--text); }
-      .kpi-card.published .kpi-value { color: var(--green); }
-      .kpi-card.pending .kpi-value { color: var(--muted); }
-      .kpi-card.failed .kpi-value { color: var(--red); }
+      .kpi-card.total .kpi-value {
+        color: var(--text);
+      }
+      .kpi-card.published .kpi-value {
+        color: var(--green);
+      }
+      .kpi-card.pending .kpi-value {
+        color: var(--muted);
+      }
+      .kpi-card.failed .kpi-value {
+        color: var(--red);
+      }
       @media (max-width: 640px) {
-        .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+        .kpi-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
 
       .delete-btn {
@@ -697,6 +903,71 @@
         font-family: "JetBrains Mono", monospace;
         border: 1px dashed var(--border);
         border-radius: var(--radius);
+      }
+
+      /* ---------- In-app confirmation modal (replaces browser confirm()) ---------- */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 6, 9, 0.7);
+        backdrop-filter: blur(2px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadein 0.15s ease both;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+      .modal-card {
+        background: linear-gradient(180deg, var(--card), #121519);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 22px 24px;
+        max-width: 380px;
+        width: 90%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.6);
+      }
+      .modal-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--crimson), transparent 70%);
+      }
+      .modal-title {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+        letter-spacing: 0.2px;
+        margin: 0 0 8px;
+        color: var(--text);
+      }
+      .modal-message {
+        font-size: 13.5px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 0 0 20px;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .modal-actions button {
+        padding: 8px 16px;
+      }
+      .modal-confirm-btn {
+        background: var(--crimson) !important;
+        color: #fff !important;
+      }
+      .modal-confirm-btn:hover {
+        background: #ff2447 !important;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -757,13 +1028,13 @@
     <div class="create-panel" id="create-form">
       <div class="panel-title">New segment</div>
       <div class="panel-fields">
-        <input id="cf-title" placeholder="Title" />
-        <input id="cf-caption" placeholder="Caption" />
-        <input
-          id="cf-media"
-          placeholder="Filename in /app/media/ (e.g. test_clip.mp4)"
-        />
-        <select id="cf-account"></select>
+        <input id="cf-title" placeholder="Default title (used when a target has no override)" />
+        <input id="cf-caption" placeholder="Default caption (used when a target has no override)" />
+        <input id="cf-media" placeholder="Filename in /app/media/ (e.g. test_clip.mp4)" />
+        <div class="panel-subtitle">
+          Select target accounts — each channel's language is pre-filled from its default (shown as a tag next to its name). Check a channel to write that channel's title/caption; publishing goes out to every checked channel at the same time.
+        </div>
+        <div id="cf-target-list" class="target-select-list"></div>
         <button onclick="createRealPost()">Create + publish now</button>
       </div>
     </div>
@@ -774,6 +1045,8 @@
         <span class="yt-empty">Loading…</span>
       </div>
     </div>
+
+    <div id="oauth-warning-banner" style="display:none;"></div>
 
     <div id="kpi-strip" class="kpi-strip">
       <div class="kpi-card total">
@@ -796,15 +1069,54 @@
 
     <div class="rundown-head">
       <span class="eyebrow">Today's rundown</span>
+      <select id="lang-filter" onchange="onLanguageFilterChange()" style="max-width:200px;"></select>
       <span class="line"></span>
     </div>
 
     <div id="posts" class="posts"></div>
 
+    <div class="modal-overlay" id="confirm-modal-overlay">
+      <div class="modal-card">
+        <div class="modal-title" id="confirm-modal-title">Confirm</div>
+        <div class="modal-message" id="confirm-modal-message"></div>
+        <div class="modal-actions">
+          <button class="secondary" id="confirm-modal-cancel">Cancel</button>
+          <button class="modal-confirm-btn" id="confirm-modal-confirm">Delete</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       let API_KEY = null;
       let CURRENT_USER_EMAIL = ""; // empty string = no user context = unrestricted (matches backend default)
       let ALL_USERS = [];
+      let ALL_ACCOUNTS_CACHE = [];
+      let LAST_POSTS_SNAPSHOT = null;
+      let CURRENT_LANGUAGE_FILTER = "";
+
+      const LANGUAGES = [
+        { code: "hi", label: "Hindi" },
+        { code: "te", label: "Telugu" },
+        { code: "bn", label: "Bangla" },
+        { code: "mr", label: "Marathi" },
+        { code: "ta", label: "Tamil" },
+        { code: "kn", label: "Kannada" },
+        { code: "ml", label: "Malayalam" },
+        { code: "en", label: "English" },
+      ];
+
+      function populateLanguageFilter() {
+        const select = document.getElementById("lang-filter");
+        select.innerHTML = ['<option value="">All languages</option>']
+          .concat(LANGUAGES.map((l) => `<option value="${l.code}">${l.label}</option>`))
+          .join("");
+      }
+
+      function onLanguageFilterChange() {
+        CURRENT_LANGUAGE_FILTER = document.getElementById("lang-filter").value;
+        LAST_POSTS_SNAPSHOT = null; // force fresh render under the new filter
+        fetchPosts();
+      }
 
       async function initAuth() {
         const res = await fetch("/dashboard-config");
@@ -861,7 +1173,19 @@
 
       const YT_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.5 6.2s-.2-1.6-.9-2.3c-.9-.9-1.9-.9-2.3-1C17.3 2.6 12 2.6 12 2.6h0s-5.3 0-8.3.3c-.4 0-1.4.1-2.3 1-.7.7-.9 2.3-.9 2.3S.2 8.1.2 10v1.9c0 1.9.2 3.8.2 3.8s.2 1.6.9 2.3c.9.9 2 .9 2.5 1 1.8.2 7.7.3 7.7.3s5.3 0 8.3-.3c.4 0 1.4-.1 2.3-1 .7-.7.9-2.3.9-2.3s.2-1.9.2-3.8V10c0-1.9-.2-3.8-.2-3.8z" fill="#FF0033"/><path d="M9.6 14.1V7.9l6 3.1-6 3.1z" fill="#fff"/></svg>`;
 
-      let ALL_ACCOUNTS_CACHE = [];
+      // ---------- OAuth 7-day expiry warning (Google Testing-mode limit) ----------
+      // A YouTube token in Testing mode expires 7 days after the OAuth
+      // consent (connected_at), no matter how often it's refreshed. This
+      // computes how close each channel is to that and surfaces it BEFORE
+      // a publish fails, instead of you finding out from a 401 in the logs.
+      const TOKEN_EXPIRY_DAYS = 7;
+      const WARNING_THRESHOLD_DAYS = 5; // start warning 2 days before expiry
+
+      function daysSinceConnected(connectedAt) {
+        if (!connectedAt) return null;
+        const ms = Date.now() - new Date(connectedAt).getTime();
+        return ms / (1000 * 60 * 60 * 24);
+      }
 
       async function loadYoutubeChannels() {
         const res = await authedFetch("/accounts/");
@@ -872,25 +1196,83 @@
         if (ytAccounts.length === 0) {
           list.innerHTML =
             '<span class="yt-empty">No YouTube channels visible to this user.</span>';
+          document.getElementById("oauth-warning-banner").style.display = "none";
           return;
         }
+
+        const expiredChannels = [];
+        const warningChannels = [];
+
         list.innerHTML = ytAccounts
-          .map(
-            (a) => `
-          <div class="yt-chip">
+          .map((a) => {
+            const age = daysSinceConnected(a.connected_at);
+            let stateClass = "";
+            let expiryHtml = "";
+            let reconnectHtml = "";
+
+            if (age === null) {
+              // No connected_at recorded yet (e.g. connected before this
+              // tracking existed) - show nothing rather than a false alarm.
+            } else if (age >= TOKEN_EXPIRY_DAYS) {
+              stateClass = "expired";
+              expiryHtml = `<span class="yt-chip-expiry expired">expired</span>`;
+              reconnectHtml = `<a class="yt-chip-reconnect" href="/auth/youtube/login" target="_blank">Reconnect</a>`;
+              expiredChannels.push(a.account_name);
+            } else if (age >= WARNING_THRESHOLD_DAYS) {
+              const daysLeft = Math.max(0, Math.ceil(TOKEN_EXPIRY_DAYS - age));
+              stateClass = "warning";
+              expiryHtml = `<span class="yt-chip-expiry warning">${daysLeft}d left</span>`;
+              reconnectHtml = `<a class="yt-chip-reconnect" href="/auth/youtube/login" target="_blank">Reconnect</a>`;
+              warningChannels.push(a.account_name);
+            }
+
+            const langBadge = a.default_language
+              ? `<span class="lang-tag">${a.default_language}</span>`
+              : `<span class="lang-tag" style="color:var(--dim); border-color:var(--border-soft);">no default</span>`;
+
+            return `
+          <div class="yt-chip ${stateClass}">
             ${YT_ICON}
             <span class="yt-chip-name">${a.account_name}</span>
+            ${langBadge}
+            ${expiryHtml}
+            ${reconnectHtml}
             <span class="yt-chip-live" title="Connected"></span>
           </div>
-        `,
-          )
+        `;
+          })
           .join("");
+
+        const banner = document.getElementById("oauth-warning-banner");
+        if (expiredChannels.length > 0) {
+          banner.style.display = "flex";
+          banner.innerHTML = `
+            <span>⚠ Token expired for: <strong>${expiredChannels.join(", ")}</strong> — publishes to these channels will fail until reconnected.</span>
+            <a href="/auth/youtube/login" target="_blank">Reconnect now</a>
+          `;
+        } else if (warningChannels.length > 0) {
+          banner.style.display = "flex";
+          banner.innerHTML = `
+            <span>Token expiring soon for: <strong>${warningChannels.join(", ")}</strong> (Google's 7-day Testing-mode limit).</span>
+            <a href="/auth/youtube/login" target="_blank">Reconnect now</a>
+          `;
+        } else {
+          banner.style.display = "none";
+        }
       }
 
+      // ---------- Create-form target cards (account + language + overrides) ----------
+      // Collapsed by default: check an account to reveal its own language
+      // picker + native-script title/caption textareas. Selecting a
+      // language sets lang="xx" on those two textareas, which switches
+      // them (via CSS [lang] rules above) to a font that actually has
+      // the right glyphs — so what you type is what shows up, in-app,
+      // no bouncing out to another tool to compose the text.
       async function loadAccounts() {
         const res = await authedFetch("/accounts/");
         const accounts = res.ok ? await res.json() : [];
-        const select = document.getElementById("cf-account");
+        ALL_ACCOUNTS_CACHE = accounts;
+
         const knownDemoNames = [
           "TV9 Main Channel",
           "tv9official",
@@ -902,34 +1284,206 @@
           const bFake = knownDemoNames.includes(b.account_name) ? 1 : 0;
           return aFake - bFake;
         });
+
+        const list = document.getElementById("cf-target-list");
         if (sorted.length === 0) {
-          select.innerHTML =
-            '<option value="">(no accounts visible to this user)</option>';
+          list.innerHTML = '<div class="yt-empty">(no accounts visible to this user)</div>';
           return;
         }
-        select.innerHTML = sorted
+
+        const langOptions = LANGUAGES.map((l) => `<option value="${l.code}">${l.label}</option>`).join("");
+
+        list.innerHTML = sorted
           .map((a) => {
             const isFake = knownDemoNames.includes(a.account_name);
-            const label = isFake
-              ? `${a.platform.toUpperCase()} — ${a.account_name} (demo — will fail if published)`
-              : `${a.platform.toUpperCase()} — ${a.account_name} (real, connected)`;
-            return `<option value="${a.id}">${label}</option>`;
+            const label = `${a.platform.toUpperCase()} — ${a.account_name}${isFake ? " (demo)" : " (real)"}`;
+            const defaultLang = a.default_language || "";
+            const langBadge = defaultLang
+              ? `<span class="lang-tag">${defaultLang}</span>`
+              : "";
+            // Pre-select this channel's default language in the dropdown -
+            // checking the box already gives you the right language for
+            // this channel without picking it again every time. Still a
+            // normal <select>, so overriding it for a one-off exception
+            // takes one click, same as before.
+            const langOptionsForAccount = LANGUAGES.map(
+              (l) => `<option value="${l.code}" ${l.code === defaultLang ? "selected" : ""}>${l.label}</option>`,
+            ).join("");
+            return `
+              <div class="target-card" data-account-id="${a.id}">
+                <div class="target-card-head">
+                  <input
+                    type="checkbox"
+                    class="cf-target-check"
+                    id="check-${a.id}"
+                    data-account-id="${a.id}"
+                    onchange="onTargetCheckToggle('${a.id}')"
+                  />
+                  <label class="account-label" for="check-${a.id}">${label} ${langBadge}</label>
+                  <select class="cf-target-lang" data-account-id="${a.id}" onchange="onTargetLangChange('${a.id}')">
+                    <option value="">No language tag</option>
+                    ${langOptionsForAccount}
+                  </select>
+                </div>
+                <div class="target-card-body" id="target-body-${a.id}" style="display:none;">
+                  <div class="field-block">
+                    <label class="field-label">Title in this language — type in Latin letters, press space to convert (optional, falls back to default title)</label>
+                    <textarea class="cf-target-title" data-account-id="${a.id}" rows="2"></textarea>
+                  </div>
+                  <div class="field-block">
+                    <label class="field-label">Caption in this language — type in Latin letters, press space to convert (optional, falls back to default caption)</label>
+                    <textarea class="cf-target-caption" data-account-id="${a.id}" rows="3"></textarea>
+                  </div>
+                  <div class="field-block">
+                    <label class="field-label">Video file for this channel (optional — leave blank to use the default file above; only needed if this channel gets a separately dubbed/edited cut)</label>
+                    <input class="cf-target-media" data-account-id="${a.id}" placeholder="e.g. marathi_dub_test_clip.mp4" />
+                  </div>
+                </div>
+              </div>
+            `;
           })
           .join("");
+
+        // The dropdown may already be pre-filled from the channel's
+        // default_language, not just from a manual user pick - apply the
+        // correct font/lang attribute to each textarea up front so it's
+        // right immediately, not only after onTargetLangChange fires.
+        sorted.forEach((a) => {
+          if (a.default_language) {
+            onTargetLangChange(a.id);
+          }
+        });
+
+        document
+          .querySelectorAll("#cf-target-list .cf-target-title, #cf-target-list .cf-target-caption")
+          .forEach(attachTransliteration);
+      }
+
+      function onTargetCheckToggle(accountId) {
+        const checked = document.getElementById(`check-${accountId}`).checked;
+        const body = document.getElementById(`target-body-${accountId}`);
+        const card = document.querySelector(`.target-card[data-account-id="${accountId}"]`);
+        body.style.display = checked ? "flex" : "none";
+        card.classList.toggle("expanded", checked);
+      }
+
+      function onTargetLangChange(accountId) {
+        const lang = document.querySelector(`.cf-target-lang[data-account-id="${accountId}"]`).value;
+        const titleField = document.querySelector(`.cf-target-title[data-account-id="${accountId}"]`);
+        const captionField = document.querySelector(`.cf-target-caption[data-account-id="${accountId}"]`);
+        if (lang) {
+          titleField.lang = lang;
+          captionField.lang = lang;
+        } else {
+          titleField.removeAttribute("lang");
+          captionField.removeAttribute("lang");
+        }
+        titleField.dir = "auto";
+        captionField.dir = "auto";
+      }
+
+      // ---------- Phonetic transliteration (type Latin, get native script) ----------
+      // Selecting a language only tags/fonts the field correctly — it does
+      // NOT convert what you type. This is what actually converts it:
+      // type "namaste" in the Hindi field, hit space, it becomes "नमस्ते"
+      // right there in the box. Uses the same backend Google's own Indic
+      // keyboards use. Unofficial/deprecated endpoint — if it's ever
+      // unreachable this fails silently and leaves your Latin text as-is,
+      // so nothing breaks; use your OS's Indic keyboard as a fallback.
+      const TRANSLIT_ITC = {
+        hi: "hi-t-i0-und",
+        te: "te-t-i0-und",
+        bn: "bn-t-i0-und",
+        mr: "mr-t-i0-und",
+        ta: "ta-t-i0-und",
+        kn: "kn-t-i0-und",
+        ml: "ml-t-i0-und",
+        // en intentionally omitted — no conversion for English
+      };
+
+      async function transliterateWord(word, langCode) {
+        const itc = TRANSLIT_ITC[langCode];
+        if (!itc || !word) return word;
+        try {
+          const url = `https://inputtools.google.com/request?text=${encodeURIComponent(word)}&itc=${itc}&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8&app=jsapi`;
+          const res = await fetch(url);
+          if (!res.ok) return word;
+          const data = await res.json();
+          // Expected shape: ["SUCCESS", [ [ "word", ["converted1", ...] ] ]]
+          const converted = data?.[1]?.[0]?.[1]?.[0];
+          return converted || word;
+        } catch (e) {
+          return word; // network/CORS failure — degrade to plain typed text, don't block the user
+        }
+      }
+
+      function attachTransliteration(el) {
+        el.addEventListener("keydown", async (e) => {
+          if (e.key !== " " && e.key !== "Enter") return;
+          const lang = el.lang;
+          if (!lang || !TRANSLIT_ITC[lang]) return; // no language picked, or English — type normally
+
+          const cursorPos = el.selectionStart;
+          const before = el.value.slice(0, cursorPos);
+          const match = before.match(/(\S+)$/); // the word just typed, right before the cursor
+          if (!match) return;
+
+          e.preventDefault(); // hold the space/enter until the converted word is in place
+          const word = match[1];
+          const start = cursorPos - word.length;
+          const after = el.value.slice(cursorPos);
+
+          const converted = await transliterateWord(word, lang);
+          const insertChar = e.key === "Enter" ? "\n" : " ";
+          el.value = el.value.slice(0, start) + converted + insertChar + after;
+          const newPos = start + converted.length + insertChar.length;
+          el.selectionStart = el.selectionEnd = newPos;
+        });
+      }
+
+      // FastAPI validation errors come back as detail: [{loc, msg, type}, ...]
+      // rather than a plain string - naively concatenating that into an
+      // alert() just shows "[object Object]". This extracts something
+      // actually readable from either shape.
+      function describeApiError(err, fallbackStatus) {
+        if (!err || !err.detail) return String(fallbackStatus);
+        if (typeof err.detail === "string") return err.detail;
+        if (Array.isArray(err.detail)) {
+          return err.detail
+            .map((e) => {
+              const field = Array.isArray(e.loc) ? e.loc.join(".") : "field";
+              return `${field}: ${e.msg}`;
+            })
+            .join("; ");
+        }
+        return JSON.stringify(err.detail);
       }
 
       async function createRealPost() {
         const title = document.getElementById("cf-title").value || "Untitled";
         const caption = document.getElementById("cf-caption").value || "";
-        const filename =
-          document.getElementById("cf-media").value || "test_clip.mp4";
-        const accountId = document.getElementById("cf-account").value;
-        if (!accountId) {
-          alert(
-            "No account selected — this user may not have access to any accounts.",
-          );
+        const filename = document.getElementById("cf-media").value || "test_clip.mp4";
+
+        const checks = Array.from(document.querySelectorAll(".cf-target-check:checked"));
+        if (checks.length === 0) {
+          alert("Select at least one target account.");
           return;
         }
+
+        const targets = checks.map((cb) => {
+          const accountId = cb.dataset.accountId;
+          const lang = document.querySelector(`.cf-target-lang[data-account-id="${accountId}"]`).value;
+          const titleOverride = document.querySelector(`.cf-target-title[data-account-id="${accountId}"]`).value;
+          const captionOverride = document.querySelector(`.cf-target-caption[data-account-id="${accountId}"]`).value;
+          const mediaOverrideFilename = document.querySelector(`.cf-target-media[data-account-id="${accountId}"]`).value;
+          return {
+            account_id: accountId,
+            language: lang || null,
+            title_override: titleOverride || null,
+            caption_override: captionOverride || null,
+            media_s3_key_override: mediaOverrideFilename ? `/app/media/${mediaOverrideFilename}` : null,
+          };
+        });
 
         const createRes = await authedFetch("/posts/", {
           method: "POST",
@@ -940,22 +1494,22 @@
             media_s3_key: `/app/media/${filename}`,
             media_type: "video",
             created_by: "dashboard",
-            target_account_ids: [accountId],
+            targets,
             scheduled_for: new Date().toISOString(),
           }),
         });
         if (!createRes.ok) {
           const err = await createRes.json().catch(() => ({}));
-          alert("Could not create post: " + (err.detail || createRes.status));
+          alert("Could not create post: " + describeApiError(err, createRes.status));
           return;
         }
         const post = await createRes.json();
-        const target = post.targets[0];
-        if (target.status !== "failed") {
-          await authedFetch(`/posts/targets/${target.id}/publish-now`, {
-            method: "POST",
-          });
-        }
+        // Publish every target that passed content validation, concurrently.
+        await Promise.all(
+          post.targets
+            .filter((t) => t.status !== "failed")
+            .map((t) => authedFetch(`/posts/targets/${t.id}/publish-now`, { method: "POST" })),
+        );
         LAST_POSTS_SNAPSHOT = null; // force render since we know something changed
         fetchPosts();
       }
@@ -986,19 +1540,74 @@
         await publishReal(targetId);
       }
 
+      // ---------- In-app confirmation modal ----------
+      // Replaces window.confirm() with a themed in-app dialog. Returns a
+      // Promise<boolean> so callers can just `await showConfirmModal(...)`
+      // the same way they'd use confirm() - true if the person clicked
+      // the confirm button, false for Cancel, clicking outside, or Esc.
+      let _confirmModalResolve = null;
+
+      function showConfirmModal(message, { title = "Confirm", confirmLabel = "Delete" } = {}) {
+        const overlay = document.getElementById("confirm-modal-overlay");
+        document.getElementById("confirm-modal-title").textContent = title;
+        document.getElementById("confirm-modal-message").textContent = message;
+        document.getElementById("confirm-modal-confirm").textContent = confirmLabel;
+        overlay.classList.add("open");
+        return new Promise((resolve) => {
+          _confirmModalResolve = resolve;
+        });
+      }
+
+      function _closeConfirmModal(result) {
+        document.getElementById("confirm-modal-overlay").classList.remove("open");
+        if (_confirmModalResolve) {
+          _confirmModalResolve(result);
+          _confirmModalResolve = null;
+        }
+      }
+
+      document.getElementById("confirm-modal-confirm").addEventListener("click", () => _closeConfirmModal(true));
+      document.getElementById("confirm-modal-cancel").addEventListener("click", () => _closeConfirmModal(false));
+      document.getElementById("confirm-modal-overlay").addEventListener("click", (e) => {
+        if (e.target.id === "confirm-modal-overlay") _closeConfirmModal(false);
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && document.getElementById("confirm-modal-overlay").classList.contains("open")) {
+          _closeConfirmModal(false);
+        }
+      });
+
+      async function deletePost(postId) {
+        const confirmed = await showConfirmModal("Delete this post? This can't be undone.", {
+          title: "Delete post",
+          confirmLabel: "Delete",
+        });
+        if (!confirmed) return;
+        const res = await authedFetch(`/posts/${postId}`, { method: "DELETE" });
+        if (!res.ok && res.status !== 204) {
+          const err = await res.json().catch(() => ({}));
+          alert("Could not delete post: " + describeApiError(err, res.status));
+          return;
+        }
+        LAST_POSTS_SNAPSHOT = null;
+        fetchPosts();
+      }
+
       function segNumber(i) {
         return String(i + 1).padStart(2, "0");
       }
 
       // ---------- Flicker fix ----------
-      // Previously, fetchPosts() rebuilt the entire #posts innerHTML every
+      // fetchPosts() previously rebuilt the entire #posts innerHTML every
       // 2 seconds unconditionally, even when the data hadn't changed. Every
       // .post-card has a CSS entrance animation (fadein), so rebuilding the
       // DOM every 2s re-triggered that animation constantly, producing the
       // "coming in and out" flicker. Fix: keep a snapshot of the last
       // rendered data and skip the re-render entirely if nothing changed.
       function updateKpiStrip(posts) {
-        let published = 0, pending = 0, failed = 0;
+        let published = 0,
+          pending = 0,
+          failed = 0;
         posts.forEach((post) => {
           post.targets.forEach((t) => {
             if (t.status === "published") published++;
@@ -1012,22 +1621,11 @@
         document.getElementById("kpi-failed").textContent = failed;
       }
 
-      async function deletePost(postId) {
-        if (!confirm("Delete this post? This can't be undone.")) return;
-        const res = await authedFetch(`/posts/${postId}`, { method: "DELETE" });
-        if (!res.ok && res.status !== 204) {
-          const err = await res.json().catch(() => ({}));
-          alert("Could not delete post: " + (err.detail || res.status));
-          return;
-        }
-        LAST_POSTS_SNAPSHOT = null;
-        fetchPosts();
-      }
-
-      let LAST_POSTS_SNAPSHOT = null;
-
       async function fetchPosts() {
-        const res = await authedFetch("/posts/");
+        const url = CURRENT_LANGUAGE_FILTER
+          ? `/posts/?language=${encodeURIComponent(CURRENT_LANGUAGE_FILTER)}`
+          : "/posts/";
+        const res = await authedFetch(url);
         if (!res.ok) return;
         const posts = await res.json();
 
@@ -1090,6 +1688,19 @@
                       ? `<div class="target-attempts">attempts: ${t.attempts}</div>`
                       : "";
 
+                  const langTag = t.language
+                    ? `<span class="lang-tag">${t.language}</span>`
+                    : "";
+
+                  const overrideBlock =
+                    t.title_override || t.caption_override || t.media_s3_key_override
+                      ? `<div class="target-override" ${t.language ? `lang="${t.language}"` : ""}>
+                           ${t.title_override ? `<div class="target-override-title">${t.title_override}</div>` : ""}
+                           ${t.caption_override ? `<div class="target-override-caption">${t.caption_override}</div>` : ""}
+                           ${t.media_s3_key_override ? `<div class="target-override-caption">Custom file: ${t.media_s3_key_override.split("/").pop()}</div>` : ""}
+                         </div>`
+                      : "";
+
                   // While a YouTube upload is in flight, show a moving
                   // progress bar instead of just the pulsing dot — much
                   // clearer in a live demo that real work is happening.
@@ -1114,11 +1725,12 @@
                 <div class="target ${isYoutube ? "yt-target" : ""}">
                   <div class="target-main">
                     <span class="dot ${t.status}"></span>
-                    <strong>${(t.platform || "?").toUpperCase()}</strong>
+                    <strong>${(t.platform || "?").toUpperCase()}</strong>${langTag}
                     <span class="target-status">${t.status}</span>
                     ${publishBtn}${retryBtn}
                   </div>
                   ${progressBar}
+                  ${overrideBlock}
                   ${errorLine}
                   ${attemptsLine}
                   ${ytEmbed}
@@ -1135,6 +1747,7 @@
       }
 
       initAuth().then(async () => {
+        populateLanguageFilter();
         await loadUserSwitcher();
         await loadAccounts();
         await loadYoutubeChannels();

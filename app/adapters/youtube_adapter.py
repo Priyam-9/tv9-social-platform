@@ -15,7 +15,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
 from app.adapters.base import PlatformAdapter, PublishResult, PublishError
-from app.models import Post, SocialAccount
+from app.models import PostTarget, SocialAccount
 from app.services import secrets_service
 
 
@@ -48,7 +48,7 @@ class YouTubeAdapter(PlatformAdapter):
                 },
             )
 
-    def _upload_blocking(self, local_path: str, credentials: Credentials, post: Post) -> dict:
+    def _upload_blocking(self, local_path: str, credentials: Credentials, target: PostTarget) -> dict:
         """
         The actual upload. The Google API client's upload calls
         (request.next_chunk()) are synchronous/blocking — there's no
@@ -56,13 +56,19 @@ class YouTubeAdapter(PlatformAdapter):
         publish() below) is what lets several of these run at the same
         time (e.g. uploading to 3 different YouTube channels at once)
         without one upload blocking the others on the same event loop.
+
+        Uses target.effective_title / target.effective_caption rather
+        than the Post's title/caption directly — this is what makes a
+        Hindi-language target actually publish with the Hindi title,
+        instead of every channel getting the same default text
+        regardless of what language override was set for it.
         """
         youtube = build("youtube", "v3", credentials=credentials)
 
         body = {
             "snippet": {
-                "title": post.title or "Untitled TV9 upload",
-                "description": post.caption or "",
+                "title": target.effective_title or "Untitled TV9 upload",
+                "description": target.effective_caption or "",
                 "categoryId": "25",  # News & Politics
             },
             "status": {
@@ -77,18 +83,18 @@ class YouTubeAdapter(PlatformAdapter):
             status, response = request.next_chunk()
         return response
 
-    async def publish(self, post: Post, account: SocialAccount) -> PublishResult:
-        if not post.media_s3_key:
+    async def publish(self, target: PostTarget, account: SocialAccount) -> PublishResult:
+        local_path = target.effective_media_s3_key
+        if not local_path:
             raise PublishError("Post has no media file — YouTube requires a video file")
 
-        local_path = post.media_s3_key  # local dev: treated as a direct file path
         if not os.path.exists(local_path):
             raise PublishError(f"Video file not found at {local_path}")
 
         try:
             await self.refresh_token_if_needed(account)
             creds = self._get_credentials(account)
-            response = await asyncio.to_thread(self._upload_blocking, local_path, creds, post)
+            response = await asyncio.to_thread(self._upload_blocking, local_path, creds, target)
             return PublishResult(platform_post_id=response["id"])
         except Exception as e:  # noqa: BLE001 — surfacing any upload failure as PublishError
             raise PublishError(f"YouTube upload failed: {type(e).__name__}: {e}") from e

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from app.models import Post, SocialAccount
+from app.models import PostTarget, SocialAccount
 
 
 @dataclass
@@ -21,14 +21,24 @@ class PlatformAdapter(ABC):
     interface — it never needs to know YouTube's quota rules or
     Instagram's container model directly.
 
-    Next phase: we'll implement YouTubeAdapter first (simplest OAuth
-    flow), then InstagramAdapter, FacebookAdapter, and XAdapter.
+    publish() takes the PostTarget rather than the Post itself. This is
+    what lets an adapter publish per-target language overrides (a
+    Hindi title/caption for the TV9 Hindi channel, a Telugu one for
+    TV9 Telugu, etc.) instead of always publishing the Post's default
+    text to every channel regardless of language. Use
+    target.effective_title / target.effective_caption inside an
+    adapter — those already fall back to the Post's default when a
+    target has no override, so you don't need to duplicate that
+    fallback logic in every adapter. The underlying Post is still
+    reachable via target.post for anything that's genuinely
+    post-level rather than per-target (e.g. media_s3_key, media_type).
     """
 
     @abstractmethod
-    async def publish(self, post: Post, account: SocialAccount) -> PublishResult:
-        """Publish `post` to `account`. Returns the platform's post ID
-        on success, or raises PublishError on failure."""
+    async def publish(self, target: PostTarget, account: SocialAccount) -> PublishResult:
+        """Publish `target` (one post-on-one-platform-account) to
+        `account`. Returns the platform's post ID on success, or
+        raises PublishError on failure."""
         raise NotImplementedError
 
     @abstractmethod

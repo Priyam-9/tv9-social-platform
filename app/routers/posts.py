@@ -24,6 +24,20 @@ router = APIRouter(prefix="/posts", tags=["posts"], dependencies=[Depends(verify
 audit_logger = logging.getLogger("tv9.audit")
 
 
+def _scope_targets(posts: list[models.Post], accessible: set[uuid.UUID] | None) -> None:
+    """
+    Mutates each post's in-memory `targets` list down to only the ones
+    the caller has access to. Doesn't touch the DB — this is purely
+    about what gets serialized back in the response. A scoped user
+    seeing a post (because >=1 target is theirs) should NOT also see
+    the status/errors of other platforms on that same post.
+    """
+    if accessible is None:
+        return
+    for post in posts:
+        post.targets = [t for t in post.targets if t.social_account_id in accessible]
+
+
 @router.post("/", response_model=schemas.PostOut)
 @limiter.limit("30/minute")
 def create_post(
@@ -34,19 +48,21 @@ def create_post(
 ):
     """
     Creates one Post, then fans it out into one PostTarget per requested
-    platform account. Each target's content is checked against that
-    specific platform's limits immediately — the SAME title/caption can
-    be fine for YouTube but too long for X, so a target that violates
-    its platform's limits is created as "failed" right away with a
-    clear reason, rather than silently attempting it later.
+    account. Each target can carry its own language + title/caption
+    override (falls back to the Post's default text when unset) and is
+    validated against that specific platform's content limits using
+    whichever text will actually be published for it — so a target
+    with an override is checked against the override, not the default.
     """
+    account_ids = [t.account_id for t in payload.targets]
     accounts = (
         db.query(models.SocialAccount)
-        .filter(models.SocialAccount.id.in_(payload.target_account_ids))
+        .filter(models.SocialAccount.id.in_(account_ids))
         .all()
     )
-    if len(accounts) != len(payload.target_account_ids):
-        raise HTTPException(status_code=400, detail="One or more target_account_ids not found")
+    if len(accounts) != len(set(account_ids)):
+        raise HTTPException(status_code=400, detail="One or more target account_ids not found")
+    accounts_by_id = {a.id: a for a in accounts}
 
     accessible = get_accessible_account_ids(current_user, db)
     if accessible is not None:
@@ -68,14 +84,21 @@ def create_post(
     db.add(post)
     db.flush()  # get post.id without committing yet
 
-    for account in accounts:
-        violations = validate_content(account.platform, payload.title, payload.caption)
+    for t in payload.targets:
+        account = accounts_by_id[t.account_id]
+        effective_title = t.title_override or payload.title
+        effective_caption = t.caption_override or payload.caption
+        violations = validate_content(account.platform, effective_title, effective_caption)
         target = models.PostTarget(
             post_id=post.id,
             social_account_id=account.id,
             scheduled_for=payload.scheduled_for,
             status="failed" if violations else "pending",
             error_message="; ".join(violations) if violations else None,
+            language=t.language,
+            title_override=t.title_override,
+            caption_override=t.caption_override,
+            media_s3_key_override=t.media_s3_key_override,
         )
         db.add(target)
 
@@ -86,18 +109,17 @@ def create_post(
 
 @router.get("/", response_model=list[schemas.PostOut])
 def list_posts(
+    language: str | None = None,
     db: Session = Depends(get_db),
     current_user: models.User | None = Depends(get_current_user),
 ):
     """
-    THE FIX: this previously ignored current_user entirely and returned
-    every post to every caller — that's why switching "Viewing as" on the
-    dashboard changed the accounts dropdown but never changed the posts
-    list. Now it mirrors the exact same pattern accounts.py already uses:
-    get_accessible_account_ids() returns None for unrestricted/admin
-    callers, or a concrete set of account IDs for a scoped user. A post
-    is visible to a scoped user if AT LEAST ONE of its targets points at
-    an account they're allowed to see.
+    Scoped by both account access AND, optionally, language. A post is
+    visible to a scoped user if at least one of its targets points at
+    an account they're allowed to see; _scope_targets() then trims the
+    returned target list down to only those visible targets, so a
+    Content Manager never sees another platform's status on a post
+    they only partially manage.
     """
     accessible = get_accessible_account_ids(current_user, db)
 
@@ -105,16 +127,14 @@ def list_posts(
         joinedload(models.Post.targets).joinedload(models.PostTarget.social_account)
     )
 
-    if accessible is not None:  # None means "no restriction" — same convention as accounts.py
-        query = query.join(models.PostTarget).filter(
-            models.PostTarget.social_account_id.in_(accessible)
-        )
+    if accessible is not None:
+        query = query.filter(models.Post.targets.any(models.PostTarget.social_account_id.in_(accessible)))
+    if language:
+        query = query.filter(models.Post.targets.any(models.PostTarget.language == language))
 
-    return (
-        query.order_by(models.Post.created_at.desc())
-        .distinct()  # the join above can duplicate a Post row if it has
-        .all()       # multiple targets that match the filter — collapse those
-    )
+    posts = query.order_by(models.Post.created_at.desc()).all()
+    _scope_targets(posts, accessible)
+    return posts
 
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
@@ -138,6 +158,7 @@ def get_post(
         if not target_account_ids & set(accessible):
             raise HTTPException(status_code=404, detail="Post not found")
 
+    _scope_targets([post], accessible)
     return post
 
 
@@ -152,6 +173,9 @@ def delete_post(
     only via /demo/reset. Same access rule as everywhere else: a scoped
     user can only delete a post if they have access to at least one of
     its target accounts; admins/unrestricted callers can delete anything.
+    Relies on Post.targets having cascade="all, delete-orphan" in
+    models.py so the child PostTarget rows are removed in the same
+    transaction instead of hitting a foreign-key violation.
     """
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
@@ -170,13 +194,14 @@ def delete_post(
 
 async def _execute_publish(target: models.PostTarget, client_ip: str) -> dict:
     """
-    Shared publish logic used by both publish_now (one target) and
-    publish_all (many targets at once, concurrently). Does NOT touch
-    the database — it only calls the adapter and returns the outcome,
-    so the caller controls exactly when writes happen. This separation
-    is what makes real concurrency safe: multiple targets can be
-    publishing at the same time without multiple things writing to the
-    database at the same time.
+    Shared publish logic used by publish_now, publish_all, AND the
+    background scheduler (app/services/scheduler.py) - all three call
+    this same function, so manual and automatic publishing behave
+    identically. Does NOT touch the database — it only calls the
+    adapter and returns the outcome, so the caller controls exactly
+    when writes happen. This separation is what makes real concurrency
+    safe: multiple targets can be publishing at the same time without
+    multiple things writing to the database at the same time.
     """
     adapter = get_adapter(target.social_account.platform)
 
@@ -190,7 +215,11 @@ async def _execute_publish(target: models.PostTarget, client_ip: str) -> dict:
     }
 
     try:
-        result = await adapter.publish(target.post, target.social_account)
+        # adapter.publish() takes the PostTarget itself (not just the
+        # Post) so it can read target.effective_title/effective_caption
+        # - the per-target language override, falling back to the
+        # Post's default text when the target has none set.
+        result = await adapter.publish(target, target.social_account)
         audit_logger.info("publish succeeded", extra={**audit_context, "platform_post_id": result.platform_post_id})
         return {"status": "published", "platform_post_id": result.platform_post_id, "error_message": None}
     except PublishError as e:

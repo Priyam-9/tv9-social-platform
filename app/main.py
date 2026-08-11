@@ -1,4 +1,6 @@
+import asyncio
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -11,16 +13,40 @@ from app.config import settings
 from app.database import engine
 from app.rate_limit import limiter
 from app.routers import accounts, posts, demo, auth, meta_auth, users
+from app.services.scheduler import scheduler_loop
 
 logging.basicConfig(
     level=settings.log_level,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Background auto-scheduler: polls for PostTarget rows whose
+    # scheduled_for has arrived and publishes them automatically. Local
+    # dev only, same as the /demo endpoints below — this is a stand-in
+    # for the AWS phase's EventBridge Scheduler, not meant to run
+    # unattended in production as-is.
+    scheduler_task = None
+    if settings.environment == "local":
+        scheduler_task = asyncio.create_task(scheduler_loop())
+
+    yield
+
+    if scheduler_task is not None:
+        scheduler_task.cancel()
+        try:
+            await scheduler_task
+        except asyncio.CancelledError:
+            pass
+
+
 app = FastAPI(
     title="TV9 Multi-Platform Publisher",
     description="Internal API for scheduling and publishing content across YouTube, Instagram, Facebook, and X.",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter

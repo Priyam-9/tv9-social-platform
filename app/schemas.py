@@ -34,6 +34,16 @@ class SocialAccountOut(BaseModel):
     account_name: str
     is_active: bool
     created_at: datetime
+    connected_at: datetime | None = None
+    default_language: str | None = None
+
+
+class PostTargetCreate(BaseModel):
+    account_id: uuid.UUID
+    language: str | None = None
+    title_override: str | None = None
+    caption_override: str | None = None
+    media_s3_key_override: str | None = None
 
 
 class PostCreate(BaseModel):
@@ -42,8 +52,7 @@ class PostCreate(BaseModel):
     media_s3_key: str | None = None
     media_type: str | None = None
     created_by: str | None = None
-    # List of account IDs to publish to, with when to publish each
-    target_account_ids: list[uuid.UUID]
+    targets: list[PostTargetCreate]
     scheduled_for: datetime
 
 
@@ -59,6 +68,10 @@ class PostTargetOut(BaseModel):
     attempts: int
     platform: str | None = None
     account_name: str | None = None
+    language: str | None = None
+    title_override: str | None = None
+    caption_override: str | None = None
+    media_s3_key_override: str | None = None
 
 
 class PostOut(BaseModel):

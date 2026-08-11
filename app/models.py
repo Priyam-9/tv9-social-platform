@@ -68,6 +68,30 @@ class SocialAccount(Base):
     secrets_manager_arn: Mapped[str] = mapped_column(String(500), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # When OAuth consent was last completed for this account. In Google's
+    # "Testing" publishing status, the refresh token itself expires 7 days
+    # after consent was granted — refreshing the access token does NOT
+    # reset this clock. This field is what lets the dashboard warn you
+    # before that happens, instead of you finding out from a failed
+    # publish (see the 401 incident this was built to prevent).
+    connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # This channel's "home" language, e.g. TV9 Hindi channel -> "hi",
+    # TV9 Marathi channel -> "mr". Lets the dashboard pre-fill a
+    # target's language the moment you select that channel, instead of
+    # you re-picking it from scratch on every single post - which is
+    # exactly the kind of manual step that gets skipped by mistake
+    # under deadline pressure. Still overridable per-post for the rare
+    # exception (e.g. an English-language clip going on the Hindi
+    # channel).
+    default_language: Mapped[str | None] = mapped_column(String(10))
+    # The language this channel is dedicated to (e.g. TV9 Hindi -> "hi",
+    # TV9 Marathi -> "mr"). Purely a UI convenience: the create-form
+    # auto-selects this as the target's language the moment the account
+    # is checked, instead of requiring it to be picked by hand every
+    # time - which is exactly the kind of manual step that gets missed
+    # under time pressure and sends the wrong language to the wrong
+    # channel. Still fully overridable per post.
+    default_language: Mapped[str | None] = mapped_column(String(10))
 
     targets: Mapped[list["PostTarget"]] = relationship(back_populates="social_account")
 
@@ -83,6 +107,7 @@ class Post(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
+
     title: Mapped[str | None] = mapped_column(String(500))
     caption: Mapped[str | None] = mapped_column(Text)
     media_s3_key: Mapped[str | None] = mapped_column(String(500))
@@ -90,7 +115,15 @@ class Post(Base):
     created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    targets: Mapped[list["PostTarget"]] = relationship(back_populates="post")
+    # cascade="all, delete-orphan": deleting a Post deletes its
+    # PostTarget rows in the same transaction. Without this, SQLAlchemy
+    # only issues DELETE on the posts row, and Postgres rejects it with
+    # a foreign key violation the moment a target exists — that
+    # unhandled FK violation is what was surfacing as the 500 on
+    # DELETE /posts/{id}.
+    targets: Mapped[list["PostTarget"]] = relationship(
+        back_populates="post", cascade="all, delete-orphan"
+    )
 
 
 class PostTarget(Base):
@@ -117,6 +150,20 @@ class PostTarget(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    # Per-target language + optional native-script overrides. If a
+    # target has no override, publishing falls back to the Post's
+    # default title/caption (see effective_title/effective_caption
+    # below) — so you're not forced to fill in every language on
+    # every post.
+    language: Mapped[str | None] = mapped_column(String(10))  # e.g. "hi", "te", "bn", "en"
+    title_override: Mapped[str | None] = mapped_column(String(500))
+    caption_override: Mapped[str | None] = mapped_column(Text)
+    # Per-target media file override, e.g. a separately dubbed Marathi
+    # cut of the same segment. Falls back to the Post's default
+    # media_s3_key when unset - most of the time every channel shares
+    # one file, this only matters on the days it doesn't.
+    media_s3_key_override: Mapped[str | None] = mapped_column(String(500))
+
     post: Mapped["Post"] = relationship(back_populates="targets")
     social_account: Mapped["SocialAccount"] = relationship(back_populates="targets")
 
@@ -127,3 +174,15 @@ class PostTarget(Base):
     @property
     def account_name(self) -> str | None:
         return self.social_account.account_name if self.social_account else None
+
+    @property
+    def effective_title(self) -> str | None:
+        return self.title_override or (self.post.title if self.post else None)
+
+    @property
+    def effective_caption(self) -> str | None:
+        return self.caption_override or (self.post.caption if self.post else None)
+
+    @property
+    def effective_media_s3_key(self) -> str | None:
+        return self.media_s3_key_override or (self.post.media_s3_key if self.post else None)
