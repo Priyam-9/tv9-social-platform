@@ -1177,7 +1177,6 @@
       // A YouTube token in Testing mode expires 7 days after the OAuth
       // consent (connected_at), no matter how often it's refreshed. This
       // computes how close each channel is to that and surfaces it BEFORE
-      // a publish fails, instead of you finding out from a 401 in the logs.
       const TOKEN_EXPIRY_DAYS = 7;
       const WARNING_THRESHOLD_DAYS = 5; // start warning 2 days before expiry
 
