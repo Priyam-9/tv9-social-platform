@@ -11,6 +11,13 @@ PLATFORM_LIMITS = {
     "instagram": {"caption": 2200},
     "facebook": {"caption": 63206},
     "x": {"caption": 280},
+    # Telegram's sendMessage text limit is 4096 characters. Our
+    # TelegramAdapter composes title + caption + link into one message,
+    # so this checks caption alone as an approximation — the adapter's
+    # actual combined text could still exceed 4096 in an edge case
+    # (very long title + very long caption + link all at once). Worth
+    # tightening later if that turns out to matter in practice.
+    "telegram": {"caption": 4096},
 }
 
 

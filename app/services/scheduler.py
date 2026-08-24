@@ -24,17 +24,56 @@ before this runs unattended at production volume.
 
 import asyncio
 import logging
+from collections import defaultdict
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import SessionLocal
 from app import models
-from app.routers.posts import _execute_publish
+from app.routers.posts import LINK_DEPENDENT_PLATFORMS, _execute_publish
 
 logger = logging.getLogger("tv9.scheduler")
 
 POLL_INTERVAL_SECONDS = 30
+
+
+async def _publish_target_group(targets: list[models.PostTarget], db: Session) -> None:
+    """
+    Same two-phase logic as posts.py's publish_all: link-dependent
+    platforms (Telegram) publish only after every other target on the
+    SAME post has finished, so they can read a real result (e.g. the
+    YouTube video link) instead of "pending". Grouped by post, not
+    across the whole batch, so a Telegram target on Post A isn't stuck
+    waiting on an unrelated YouTube upload on Post B.
+    """
+    primary = [t for t in targets if t.social_account.platform not in LINK_DEPENDENT_PLATFORMS]
+    dependent = [t for t in targets if t.social_account.platform in LINK_DEPENDENT_PLATFORMS]
+
+    async def _run_wave(wave: list[models.PostTarget]) -> None:
+        if not wave:
+            return
+        outcomes = await asyncio.gather(
+            *[_execute_publish(t, "scheduler") for t in wave],
+            return_exceptions=True,
+        )
+        for target, outcome in zip(wave, outcomes):
+            if isinstance(outcome, Exception):
+                target.status = "failed"
+                target.error_message = f"Scheduler error: {type(outcome).__name__}: {outcome}"
+                logger.error(f"scheduler: unexpected error publishing target {target.id}: {outcome}")
+                continue
+            target.status = outcome["status"]
+            target.platform_post_id = outcome["platform_post_id"]
+            target.error_message = outcome["error_message"]
+            if outcome["status"] == "published":
+                target.published_at = datetime.now(timezone.utc)
+        db.commit()
+        for target in wave:
+            db.refresh(target)
+
+    await _run_wave(primary)
+    await _run_wave(dependent)
 
 
 async def _publish_due_targets(db: Session) -> None:
@@ -62,28 +101,15 @@ async def _publish_due_targets(db: Session) -> None:
         target.attempts += 1
     db.commit()
 
-    outcomes = await asyncio.gather(
-        *[_execute_publish(t, "scheduler") for t in due_targets],
-        return_exceptions=True,
-    )
+    # Group by post so each post's own primary/dependent ordering is
+    # independent of every other post's - a slow YouTube upload on one
+    # post never delays a Telegram-only post that has no dependency.
+    by_post: dict = defaultdict(list)
+    for target in due_targets:
+        by_post[target.post_id].append(target)
 
-    for target, outcome in zip(due_targets, outcomes):
-        if isinstance(outcome, Exception):
-            # _execute_publish already catches its own exceptions and
-            # returns a dict describing the failure — this branch is a
-            # safety net in case something outside that (e.g. a DB
-            # error mid-publish) slips through uncaught.
-            target.status = "failed"
-            target.error_message = f"Scheduler error: {type(outcome).__name__}: {outcome}"
-            logger.error(f"scheduler: unexpected error publishing target {target.id}: {outcome}")
-            continue
-        target.status = outcome["status"]
-        target.platform_post_id = outcome["platform_post_id"]
-        target.error_message = outcome["error_message"]
-        if outcome["status"] == "published":
-            target.published_at = datetime.now(timezone.utc)
-
-    db.commit()
+    for post_targets in by_post.values():
+        await _publish_target_group(post_targets, db)
 
 
 async def scheduler_loop() -> None:

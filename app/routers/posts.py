@@ -16,6 +16,12 @@ from app.services.content_limits import validate_content
 
 router = APIRouter(prefix="/posts", tags=["posts"], dependencies=[Depends(verify_api_key)])
 
+# Platforms whose content depends on ANOTHER target's result on the
+# same Post (e.g. Telegram posts a link back to the YouTube upload).
+# These must publish AFTER every other target on the post has finished,
+# not simultaneously — see _publish_targets_two_phase below.
+LINK_DEPENDENT_PLATFORMS = {"telegram"}
+
 # Structured audit log — closes the "no audit logging" gap from the
 # security review. Every publish attempt (success or failure) is logged
 # with who, what, and the outcome. In AWS this flows into CloudWatch
@@ -263,21 +269,63 @@ async def publish_now(request: Request, target_id: uuid.UUID, db: Session = Depe
     return target
 
 
+async def _publish_targets_two_phase(targets: list[models.PostTarget], db: Session, client_ip: str) -> dict[uuid.UUID, dict]:
+    """
+    Splits targets into two waves: everything except link-dependent
+    platforms (e.g. Telegram) fires FIRST, concurrently, exactly as
+    before. Once that wave is committed to the database, the
+    link-dependent wave fires — also concurrently among themselves —
+    so a Telegram adapter reading target.post.targets can see the
+    YouTube sibling's real platform_post_id instead of "pending".
+
+    Returns a dict of target.id -> outcome, so the caller can write
+    results back to the DB the same way regardless of which wave a
+    target was in.
+    """
+    primary = [t for t in targets if t.social_account.platform not in LINK_DEPENDENT_PLATFORMS]
+    dependent = [t for t in targets if t.social_account.platform in LINK_DEPENDENT_PLATFORMS]
+
+    outcomes: dict[uuid.UUID, dict] = {}
+
+    if primary:
+        primary_outcomes = await asyncio.gather(*[_execute_publish(t, client_ip) for t in primary])
+        for target, outcome in zip(primary, primary_outcomes):
+            outcomes[target.id] = outcome
+            target.status = outcome["status"]
+            target.platform_post_id = outcome["platform_post_id"]
+            target.error_message = outcome["error_message"]
+            if outcome["status"] == "published":
+                target.published_at = datetime.now(timezone.utc)
+        db.commit()
+        # Refresh so the dependent wave's target.post.targets reflects
+        # the just-committed status/platform_post_id, not stale data
+        # loaded before the primary wave ran.
+        for target in primary:
+            db.refresh(target)
+
+    if dependent:
+        dependent_outcomes = await asyncio.gather(*[_execute_publish(t, client_ip) for t in dependent])
+        for target, outcome in zip(dependent, dependent_outcomes):
+            outcomes[target.id] = outcome
+            target.status = outcome["status"]
+            target.platform_post_id = outcome["platform_post_id"]
+            target.error_message = outcome["error_message"]
+            if outcome["status"] == "published":
+                target.published_at = datetime.now(timezone.utc)
+        db.commit()
+
+    return outcomes
+
+
 @router.post("/{post_id}/publish-all", response_model=list[schemas.PostTargetOut])
 @limiter.limit("10/minute")
 async def publish_all(request: Request, post_id: uuid.UUID, db: Session = Depends(get_db)):
     """
-    Publishes every pending target of a post AT THE SAME TIME, not one
-    after another. This is what an admin managing several YouTube
-    channels (or a mix of platforms) uses to push one post out
-    everywhere in a single action, instead of clicking publish-now
-    once per channel and waiting for each to finish sequentially.
-
-    Real concurrency, not just "fired one after another fast": each
-    target's adapter call runs independently via asyncio.gather, and
-    YouTube's adapter specifically runs its blocking upload in a
-    background thread so multiple simultaneous YouTube uploads don't
-    block each other.
+    Publishes every pending target of a post. Non-link-dependent
+    platforms (YouTube, Instagram, etc.) fire simultaneously, exactly
+    as before. Telegram (and anything else in LINK_DEPENDENT_PLATFORMS)
+    fires right after, once it can read a real result from its
+    sibling targets — see _publish_targets_two_phase.
     """
     targets = (
         db.query(models.PostTarget)
@@ -294,16 +342,8 @@ async def publish_all(request: Request, post_id: uuid.UUID, db: Session = Depend
     db.commit()
 
     client_ip = request.client.host if request.client else "unknown"
-    outcomes = await asyncio.gather(*[_execute_publish(t, client_ip) for t in targets])
+    await _publish_targets_two_phase(targets, db, client_ip)
 
-    for target, outcome in zip(targets, outcomes):
-        target.status = outcome["status"]
-        target.platform_post_id = outcome["platform_post_id"]
-        target.error_message = outcome["error_message"]
-        if outcome["status"] == "published":
-            target.published_at = datetime.now(timezone.utc)
-
-    db.commit()
     for target in targets:
         db.refresh(target)
     return targets
