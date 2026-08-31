@@ -4,19 +4,25 @@ OAuth flow — a bot token (created once via @BotFather) can post to any
 channel/group it's been added to as an admin. refresh_token_if_needed
 is a deliberate no-op because bot tokens don't expire.
 
-Telegram posts here are text-only: title + caption + a link back to
-the corresponding YouTube upload on the same Post, rather than a
-direct video upload. This avoids Telegram Bot API's
-direct-upload
-limit entirely and matches the pattern already used in the legacy
-rsspostbangla.py script (title + link, sent as HTML-formatted text).
+Telegram posts here MIRROR the YouTube sibling target's actual
+title/caption (whatever language override YouTube used) plus a link
+back to that upload — rather than using Telegram's own separate
+title/caption fields. This means you never have to retype or
+duplicate the same text for Telegram; it automatically matches
+whatever YouTube actually published, in whatever language that was.
+Telegram's own title/caption fields (if filled in) are only used as a
+fallback when the post has no YouTube target at all.
 
-Because the link comes from a SIBLING PostTarget's result (the YouTube
-target on the same Post), this adapter reads target.post.targets to
-find that sibling — which only works correctly if the YouTube target
-has already published by the time this runs. See the two-phase
-ordering in posts.py's publish_all and scheduler.py for how that's
-guaranteed.
+This is text-only — no direct video upload — which avoids Telegram
+Bot API's 50MB direct-upload limit entirely, matching the pattern
+already used in the legacy rsspostbangla.py script (title + link,
+sent as HTML-formatted text).
+
+Because the mirrored text and link come from a SIBLING PostTarget's
+result, this adapter reads target.post.targets to find it — which
+only works correctly if the YouTube target has already published by
+the time this runs. See the two-phase ordering in posts.py's
+publish_all and scheduler.py for how that's guaranteed.
 """
 
 import asyncio
@@ -38,42 +44,58 @@ class TelegramAdapter(PlatformAdapter):
         # satisfy the PlatformAdapter interface.
         return None
 
-    def _find_youtube_link(self, target: PostTarget) -> str | None:
+    def _find_youtube_sibling(self, target: PostTarget) -> PostTarget | None:
         """
-        Looks for a sibling PostTarget on the same Post that's a
-        published YouTube upload, and builds a youtu.be link from its
-        platform_post_id (YouTube's video ID). Returns None if no
-        YouTube sibling exists yet, or it hasn't published successfully
-        — callers should treat that as "link not available" rather
-        than an error, since a post might legitimately go to Telegram
-        without ever targeting YouTube.
+        Returns the first YouTube PostTarget on the same Post, if any
+        — regardless of whether it's published yet. Used both to
+        mirror its title/caption and (once published) to build the
+        link. If a post has more than one YouTube target (e.g. a
+        Hindi channel and a Marathi channel), this picks whichever one
+        appears first — there's no per-post way to choose which one
+        Telegram mirrors yet.
         """
         post = target.post
         if not post:
             return None
         for sibling in post.targets:
-            if (
-                sibling.social_account
-                and sibling.social_account.platform == "youtube"
-                and sibling.status == "published"
-                and sibling.platform_post_id
-            ):
-                return f"https://youtu.be/{sibling.platform_post_id}"
+            if sibling.social_account and sibling.social_account.platform == "youtube":
+                return sibling
         return None
 
     def _compose_message(self, target: PostTarget) -> str:
-        title = target.effective_title or "Untitled TV9 upload"
-        caption = target.effective_caption or ""
-        link = self._find_youtube_link(target)
+        youtube_sibling = self._find_youtube_sibling(target)
+
+        if youtube_sibling:
+            # Mirror YouTube's ACTUAL published text, not Telegram's
+            # own fields — this is what makes a Hindi-override YouTube
+            # upload produce a Hindi Telegram message automatically,
+            # without retyping anything into Telegram's own caption.
+            title = youtube_sibling.effective_title or "Untitled TV9 upload"
+            caption = youtube_sibling.effective_caption or ""
+        else:
+            # No YouTube target on this post at all — fall back to
+            # Telegram's own title/caption so Telegram-only posts
+            # still work.
+            title = target.effective_title or "Untitled TV9 upload"
+            caption = target.effective_caption or ""
+
+        link = None
+        if (
+            youtube_sibling
+            and youtube_sibling.status == "published"
+            and youtube_sibling.platform_post_id
+        ):
+            link = f"https://youtu.be/{youtube_sibling.platform_post_id}"
 
         parts = [f"<b>{html.escape(title)}</b>"]
         if caption:
             parts.append(html.escape(caption))
         if link:
             parts.append(link)
-        # If there's genuinely no YouTube sibling on this post at all
-        # (Telegram-only post), that's fine — just title + caption,
-        # no missing-link placeholder needed.
+        # If there's a YouTube sibling but it hasn't published yet
+        # (shouldn't normally happen given the two-phase ordering),
+        # this just omits the link rather than erroring — better to
+        # send the text without a link than to fail the whole post.
 
         return "\n\n".join(parts)
 

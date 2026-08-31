@@ -59,7 +59,7 @@
         background: var(--crimson-glow);
       }
 
-      /* ---------- Header ---------- */
+      /* ---------- Header file ---------- */
       header {
         display: flex;
         align-items: flex-start;
@@ -1502,13 +1502,19 @@
           alert("Could not create post: " + describeApiError(err, createRes.status));
           return;
         }
-        const post = await createRes.json();
-        // Publish every target that passed content validation, concurrently.
-        await Promise.all(
-          post.targets
-            .filter((t) => t.status !== "failed")
-            .map((t) => authedFetch(`/posts/targets/${t.id}/publish-now`, { method: "POST" })),
-        );
+                const post = await createRes.json();
+        // Publish via publish-all, NOT individual publish-now calls per
+        // target. publish-now has no ordering awareness - firing it once
+        // per target via Promise.all meant every target raced every other
+        // target with no concept of "wait for YouTube first," which is
+        // exactly why Telegram's link kept coming through empty: it was
+        // checking for a published YouTube sibling before YouTube's
+        // upload had finished. publish-all handles the two-phase
+        // ordering (LINK_DEPENDENT_PLATFORMS) correctly.
+        const hasPublishableTarget = post.targets.some((t) => t.status !== "failed");
+        if (hasPublishableTarget) {
+          await authedFetch(`/posts/${post.id}/publish-all`, { method: "POST" });
+        }
         LAST_POSTS_SNAPSHOT = null; // force render since we know something changed
         fetchPosts();
       }
