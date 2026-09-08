@@ -15,9 +15,11 @@ after runs off a signed, DB-backed session token instead. This is
 interim hardening, not real authentication — real login (password or
 Google OAuth) is still needed before wider rollout or AWS deployment.
 
-Requests with no valid session cookie are treated as unrestricted
+Requests with NO session cookie at all are treated as unrestricted
 (equivalent to admin), preserving the system's pre-existing fallback
 behavior for local dev/testing and anything not yet updated to log in.
+A cookie that WAS sent but doesn't match a live session (expired,
+logged out, tampered) is treated differently — see get_current_user.
 """
 
 import uuid
@@ -50,14 +52,23 @@ def verify_api_key(x_api_key: str = Header(default=None)):
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> "models.User | None":
     """
     Returns the User tied to the session cookie, or None if no cookie
-    was sent (treated as unrestricted access, see module docstring).
-    Raises 401 if a cookie was sent but doesn't match a live session —
-    distinguishing "not logged in" (fine, falls back to unrestricted)
-    from "your session is invalid/expired" (the client should know,
-    not silently be treated as an admin).
+    was sent at all (treated as unrestricted access, see module
+    docstring). Raises 401 if a cookie was sent but doesn't match a
+    live session — distinguishing "never logged in" (fine, falls back
+    to unrestricted) from "you HAD a session and it's now gone"
+    (invalid/expired/logged-out — the client should be told, not
+    silently handed admin access back).
+
+    Uses `raw_token is None` rather than `not raw_token` deliberately:
+    logout() sends an empty-string cookie (via delete_cookie), and an
+    empty string is falsy in Python — `not raw_token` would treat that
+    the same as "no cookie sent," silently falling back to
+    unrestricted access right after logout. Checking `is None`
+    specifically means an empty-string cookie still gets looked up
+    below, fails to match any session, and correctly raises 401.
     """
     raw_token = request.cookies.get(SESSION_COOKIE_NAME)
-    if not raw_token:
+    if raw_token is None:
         return None
 
     token_hash = models.hash_session_token(raw_token)
