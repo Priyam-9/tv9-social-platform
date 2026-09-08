@@ -23,6 +23,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - YOUTUBE_CHAOS_FAIL_ATTEMPTS=2
     ports:
       - "8000:8000"
     volumes:

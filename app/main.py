@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.database import engine
 from app.rate_limit import limiter
-from app.routers import accounts, posts, demo, auth, meta_auth, users
+from app.routers import accounts, posts, demo, auth, meta_auth, users, auth_session
 from app.services.scheduler import scheduler_loop
 
 logging.basicConfig(
@@ -23,11 +23,6 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Background auto-scheduler: polls for PostTarget rows whose
-    # scheduled_for has arrived and publishes them automatically. Local
-    # dev only, same as the /demo endpoints below — this is a stand-in
-    # for the AWS phase's EventBridge Scheduler, not meant to run
-    # unattended in production as-is.
     scheduler_task = None
     if settings.environment == "local":
         scheduler_task = asyncio.create_task(scheduler_loop())
@@ -57,10 +52,8 @@ app.include_router(posts.router)
 app.include_router(auth.router)
 app.include_router(meta_auth.router)
 app.include_router(users.router)
+app.include_router(auth_session.router)
 
-# Demo endpoints (seed/simulate/reset fake data) are only ever wired up
-# in local/dev environments — they must never be reachable once this is
-# deployed for real, since /demo/reset deletes all data unconditionally.
 if settings.environment == "local":
     app.include_router(demo.router)
 
@@ -74,8 +67,6 @@ def root():
 
 @app.get("/health")
 def health_check():
-    """Checks the app itself AND that the database is actually reachable —
-    a plain 200 that never touches Postgres can mask a real outage."""
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -86,8 +77,6 @@ def health_check():
 
 @app.get("/dashboard")
 def dashboard():
-    """Simple visual dashboard for demos — shows posts and their
-    per-platform publish status, auto-refreshing every 2 seconds."""
     return FileResponse(STATIC_DIR / "dashboard.html")
 
 

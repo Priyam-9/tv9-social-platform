@@ -1,3 +1,5 @@
+import hashlib
+import secrets as secrets_module
 import uuid
 from datetime import datetime
 
@@ -49,6 +51,45 @@ class UserAccountAccess(Base):
     social_account: Mapped["SocialAccount"] = relationship()
 
 
+class Session(Base):
+    """
+    A logged-in browser session (see app/routers/auth_session.py).
+    Created by POST /auth/login after validating X-User-Email against
+    a real User row; the raw token is sent to the browser as an
+    httponly cookie and NEVER stored here — only its SHA-256 hash, so
+    a DB read alone can't be used to forge a session (same principle
+    as password hashing). Every authenticated request looks up
+    token_hash and checks expires_at, instead of trusting a
+    client-supplied header directly.
+
+    SCOPE NOTE: this hardens against session/token replay and header
+    forgery on ordinary requests, but X-User-Email is still trusted at
+    face value at the single /auth/login moment — this is NOT real
+    authentication (no password/second factor). See auth_session.py's
+    module docstring for the full explanation.
+    """
+
+    __tablename__ = "sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    user: Mapped["User"] = relationship()
+
+
+def hash_session_token(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode()).hexdigest()
+
+
+def generate_session_token() -> str:
+    # 32 bytes of randomness, URL-safe — long enough that guessing is
+    # infeasible even with rate-limit-free brute force.
+    return secrets_module.token_urlsafe(32)
+
+
 class SocialAccount(Base):
     """
     One row per connected platform account (e.g. TV9's YouTube channel,
@@ -83,14 +124,6 @@ class SocialAccount(Base):
     # under deadline pressure. Still overridable per-post for the rare
     # exception (e.g. an English-language clip going on the Hindi
     # channel).
-    default_language: Mapped[str | None] = mapped_column(String(10))
-    # The language this channel is dedicated to (e.g. TV9 Hindi -> "hi",
-    # TV9 Marathi -> "mr"). Purely a UI convenience: the create-form
-    # auto-selects this as the target's language the moment the account
-    # is checked, instead of requiring it to be picked by hand every
-    # time - which is exactly the kind of manual step that gets missed
-    # under time pressure and sends the wrong language to the wrong
-    # channel. Still fully overridable per post.
     default_language: Mapped[str | None] = mapped_column(String(10))
 
     targets: Mapped[list["PostTarget"]] = relationship(back_populates="social_account")

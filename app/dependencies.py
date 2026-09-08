@@ -1,32 +1,35 @@
 """
-Simple API key authentication. Every endpoint that can read or modify
-data (accounts, posts, publishing) requires a valid X-API-Key header
-matching API_ACCESS_KEY in .env.
+Session-based authentication. get_current_user reads the signed
+session cookie set by POST /auth/login and looks up the matching
+Session row (via its hash) in Postgres — X-User-Email is no longer
+trusted on ordinary requests, only at the login step itself (see
+app/routers/auth_session.py).
 
-This is intentionally simple — a single shared key, not per-user login.
-It closes the "anyone on the network can hit the API" gap identified in
-the security review.
+SCOPE NOTE: this does not verify that the person who called /login
+actually is who they claimed — X-User-Email is still trusted at face
+value at that one endpoint, with no password or second factor. What
+this closes is re-trusting that claim on every subsequent request:
+before this, any request carrying a spoofed X-User-Email header got
+scoped access; now that only works once, at /login, and everything
+after runs off a signed, DB-backed session token instead. This is
+interim hardening, not real authentication — real login (password or
+Google OAuth) is still needed before wider rollout or AWS deployment.
 
-On top of the API key, an optional X-User-Email header identifies WHICH
-person is making the request, for the Admin vs Content Manager access
-model. This is an interim mechanism — it trusts whatever email the
-client sends, which is fine while only the dashboard (running on
-trusted internal infrastructure) sends it, but is NOT a substitute for
-real login. Real authentication (verifying the person actually is who
-they claim) replaces this later; until then, requests with no
-X-User-Email header are treated as unrestricted (equivalent to admin),
-matching the system's behavior before roles existed — so nothing
-already built breaks as this rolls out gradually.
+Requests with no valid session cookie are treated as unrestricted
+(equivalent to admin), preserving the system's pre-existing fallback
+behavior for local dev/testing and anything not yet updated to log in.
 """
 
 import uuid
+from datetime import datetime, timezone
 
-from fastapi import Header, HTTPException, Depends
+from fastapi import Header, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
 from app import models
+from app.routers.auth_session import SESSION_COOKIE_NAME
 
 
 def verify_api_key(x_api_key: str = Header(default=None)):
@@ -44,17 +47,30 @@ def verify_api_key(x_api_key: str = Header(default=None)):
         raise HTTPException(status_code=401, detail="Missing or invalid X-API-Key header")
 
 
-def get_current_user(
-    x_user_email: str = Header(default=None), db: Session = Depends(get_db)
-) -> "models.User | None":
-    """Returns the User matching X-User-Email, or None if the header
-    wasn't sent (treated as unrestricted access, see module docstring)."""
-    if not x_user_email:
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> "models.User | None":
+    """
+    Returns the User tied to the session cookie, or None if no cookie
+    was sent (treated as unrestricted access, see module docstring).
+    Raises 401 if a cookie was sent but doesn't match a live session —
+    distinguishing "not logged in" (fine, falls back to unrestricted)
+    from "your session is invalid/expired" (the client should know,
+    not silently be treated as an admin).
+    """
+    raw_token = request.cookies.get(SESSION_COOKIE_NAME)
+    if not raw_token:
         return None
-    user = db.query(models.User).filter(models.User.email == x_user_email).first()
-    if not user:
-        raise HTTPException(status_code=401, detail=f"No user found for email: {x_user_email}")
-    return user
+
+    token_hash = models.hash_session_token(raw_token)
+    session = db.query(models.Session).filter(models.Session.token_hash == token_hash).first()
+    if not session:
+        raise HTTPException(status_code=401, detail="Invalid or expired session — please log in again")
+
+    if session.expires_at < datetime.now(timezone.utc):
+        db.delete(session)
+        db.commit()
+        raise HTTPException(status_code=401, detail="Session expired — please log in again")
+
+    return session.user
 
 
 def get_accessible_account_ids(user: "models.User | None", db: Session) -> set[uuid.UUID] | None:

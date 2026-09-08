@@ -4,29 +4,35 @@ OAuth flow — a bot token (created once via @BotFather) can post to any
 channel/group it's been added to as an admin. refresh_token_if_needed
 is a deliberate no-op because bot tokens don't expire.
 
-Telegram posts here MIRROR the YouTube sibling target's actual
+Telegram posts here MIRROR every YouTube sibling target's actual
 title/caption (whatever language override YouTube used) plus a link
-back to that upload — rather than using Telegram's own separate
-title/caption fields. This means you never have to retype or
-duplicate the same text for Telegram; it automatically matches
-whatever YouTube actually published, in whatever language that was.
-Telegram's own title/caption fields (if filled in) are only used as a
-fallback when the post has no YouTube target at all.
+back to that upload — one Telegram message PER YouTube target, so a
+post going out to e.g. a Hindi channel and a Marathi channel produces
+two separate Telegram messages, each with its own title/caption/link
+and its own language label if one was set.
+
+FAILED-SIBLING BEHAVIOR: if a YouTube sibling target did NOT publish
+successfully, its Telegram message is skipped entirely — not sent
+with a missing link. A Telegram message with a title/caption but no
+video attached looks like a working post with a broken link, which is
+worse than no message at all; skipping makes the failure visible via
+absence rather than papering over it with half-working content.
 
 This is text-only — no direct video upload — which avoids Telegram
 Bot API's 50MB direct-upload limit entirely, matching the pattern
 already used in the legacy rsspostbangla.py script (title + link,
 sent as HTML-formatted text).
 
-Because the mirrored text and link come from a SIBLING PostTarget's
-result, this adapter reads target.post.targets to find it — which
-only works correctly if the YouTube target has already published by
-the time this runs. See the two-phase ordering in posts.py's
+Because the mirrored text and links come from SIBLING PostTargets'
+results, this adapter reads target.post.targets to find them — which
+only works correctly if the YouTube targets have already published (or
+failed) by the time this runs. See the two-phase ordering in posts.py's
 publish_all and scheduler.py for how that's guaranteed.
 """
 
 import asyncio
 import html
+import logging
 
 import requests
 
@@ -34,70 +40,66 @@ from app.adapters.base import PlatformAdapter, PublishResult, PublishError
 from app.models import PostTarget, SocialAccount
 from app.services import secrets_service
 
+logger = logging.getLogger("tv9.telegram")
+
 TELEGRAM_API_BASE = "https://api.telegram.org"
 REQUEST_TIMEOUT_SECONDS = 20
 
 
 class TelegramAdapter(PlatformAdapter):
     async def refresh_token_if_needed(self, account: SocialAccount) -> None:
-        # Bot tokens don't expire — nothing to refresh. Present only to
-        # satisfy the PlatformAdapter interface.
         return None
 
-    def _find_youtube_sibling(self, target: PostTarget) -> PostTarget | None:
-        """
-        Returns the first YouTube PostTarget on the same Post, if any
-        — regardless of whether it's published yet. Used both to
-        mirror its title/caption and (once published) to build the
-        link. If a post has more than one YouTube target (e.g. a
-        Hindi channel and a Marathi channel), this picks whichever one
-        appears first — there's no per-post way to choose which one
-        Telegram mirrors yet.
-        """
+    def _find_youtube_siblings(self, target: PostTarget) -> list[PostTarget]:
         post = target.post
         if not post:
-            return None
-        for sibling in post.targets:
-            if sibling.social_account and sibling.social_account.platform == "youtube":
-                return sibling
-        return None
+            return []
+        return [
+            sibling
+            for sibling in post.targets
+            if sibling.social_account and sibling.social_account.platform == "youtube"
+        ]
 
-    def _compose_message(self, target: PostTarget) -> str:
-        youtube_sibling = self._find_youtube_sibling(target)
+    def _compose_messages(self, target: PostTarget) -> list[str]:
+        """
+        Returns a list of message texts to send — one per YouTube
+        sibling that published successfully. Siblings that failed are
+        skipped entirely (see module docstring). If the post has no
+        YouTube target at all, falls back to a single message using
+        Telegram's own title/caption fields, unchanged from before.
+        """
+        youtube_siblings = self._find_youtube_siblings(target)
 
-        if youtube_sibling:
-            # Mirror YouTube's ACTUAL published text, not Telegram's
-            # own fields — this is what makes a Hindi-override YouTube
-            # upload produce a Hindi Telegram message automatically,
-            # without retyping anything into Telegram's own caption.
-            title = youtube_sibling.effective_title or "Untitled TV9 upload"
-            caption = youtube_sibling.effective_caption or ""
-        else:
-            # No YouTube target on this post at all — fall back to
-            # Telegram's own title/caption so Telegram-only posts
-            # still work.
+        if not youtube_siblings:
             title = target.effective_title or "Untitled TV9 upload"
             caption = target.effective_caption or ""
+            parts = [f"<b>{html.escape(title)}</b>"]
+            if caption:
+                parts.append(html.escape(caption))
+            return ["\n\n".join(parts)]
 
-        link = None
-        if (
-            youtube_sibling
-            and youtube_sibling.status == "published"
-            and youtube_sibling.platform_post_id
-        ):
-            link = f"https://youtu.be/{youtube_sibling.platform_post_id}"
+        messages = []
+        for sibling in youtube_siblings:
+            if sibling.status != "published" or not sibling.platform_post_id:
+                logger.info(
+                    "Skipping Telegram message for YouTube sibling %s (status=%s) — not published, no message sent",
+                    sibling.id, sibling.status,
+                )
+                continue
 
-        parts = [f"<b>{html.escape(title)}</b>"]
-        if caption:
-            parts.append(html.escape(caption))
-        if link:
+            title = sibling.effective_title or "Untitled TV9 upload"
+            caption = sibling.effective_caption or ""
+            link = f"https://youtu.be/{sibling.platform_post_id}"
+            label = f"[{sibling.language.upper()}] " if sibling.language else ""
+
+            parts = [f"<b>{label}{html.escape(title)}</b>"]
+            if caption:
+                parts.append(html.escape(caption))
             parts.append(link)
-        # If there's a YouTube sibling but it hasn't published yet
-        # (shouldn't normally happen given the two-phase ordering),
-        # this just omits the link rather than erroring — better to
-        # send the text without a link than to fail the whole post.
 
-        return "\n\n".join(parts)
+            messages.append("\n\n".join(parts))
+
+        return messages
 
     def _send_blocking(self, bot_token: str, chat_id: str, text: str) -> dict:
         url = f"{TELEGRAM_API_BASE}/bot{bot_token}/sendMessage"
@@ -122,11 +124,24 @@ class TelegramAdapter(PlatformAdapter):
                 "Telegram account is missing bot_token or chat_id in its stored secret"
             )
 
-        text = self._compose_message(target)
+        messages = self._compose_messages(target)
+
+        if not messages:
+            # Every YouTube sibling failed — nothing to send. This is
+            # a real failure, not a silent no-op: the caller should
+            # see this target as failed, not "published" with zero
+            # actual messages sent.
+            raise PublishError(
+                "No Telegram message sent — all YouTube sibling targets failed to publish"
+            )
 
         try:
-            result = await asyncio.to_thread(self._send_blocking, bot_token, chat_id, text)
-            return PublishResult(platform_post_id=str(result["message_id"]))
+            message_ids = []
+            for text in messages:
+                result = await asyncio.to_thread(self._send_blocking, bot_token, chat_id, text)
+                message_ids.append(str(result["message_id"]))
+
+            return PublishResult(platform_post_id=",".join(message_ids))
         except PublishError:
             raise
         except requests.RequestException as e:
