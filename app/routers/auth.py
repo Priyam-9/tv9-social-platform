@@ -8,18 +8,12 @@ point we exchange the code for tokens, look up the channel, and store
 
 
 import os
+from datetime import datetime, timezone
 
 from app.config import settings
 
-# google-auth-oauthlib refuses non-HTTPS redirect URIs by default. Our
-# local dev callback is http://localhost:8000/... (no TLS), so we have
-# to explicitly allow "insecure" transport - ONLY ever do this in local
-# dev. In AWS, the ALB terminates real HTTPS and this flag must NOT be
-# set, since it would allow token exchange over plain HTTP in production.
 if settings.environment == "local":
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-    # Google sometimes returns scopes in a different order/format than
-    # requested - without this, the library treats that as an error.
     os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -39,9 +33,6 @@ SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
 ]
 
-# Holds in-progress OAuth flows keyed by `state`. In-memory is fine for
-# local dev with a single process; a multi-instance deployment would
-# need this in Redis/DB instead.
 _pending_flows: dict[str, Flow] = {}
 
 
@@ -70,9 +61,9 @@ def youtube_login():
 
     flow = _build_flow()
     auth_url, state = flow.authorization_url(
-        access_type="offline",  # needed to get a refresh_token back
+        access_type="offline",
         include_granted_scopes="true",
-        prompt="consent",  # forces refresh_token on every login during dev/testing
+        prompt="consent",
     )
     _pending_flows[state] = flow
     return RedirectResponse(auth_url)
@@ -85,11 +76,9 @@ def youtube_callback(request: Request, db: Session = Depends(get_db)):
     if flow is None:
         raise HTTPException(status_code=400, detail="Unknown or expired OAuth state — try /auth/youtube/login again")
 
-    # Exchange the authorization code for tokens
     flow.fetch_token(authorization_response=str(request.url))
     credentials = flow.credentials
 
-    # Look up the channel this token belongs to, to use as account_name
     youtube = build("youtube", "v3", credentials=credentials)
     channel_response = youtube.channels().list(mine=True, part="snippet").execute()
     items = channel_response.get("items", [])
@@ -112,6 +101,8 @@ def youtube_callback(request: Request, db: Session = Depends(get_db)):
         },
     )
 
+    now = datetime.now(timezone.utc)
+
     existing = (
         db.query(models.SocialAccount)
         .filter(models.SocialAccount.platform == "youtube", models.SocialAccount.account_name == channel_title)
@@ -120,12 +111,14 @@ def youtube_callback(request: Request, db: Session = Depends(get_db)):
     if existing:
         existing.secrets_manager_arn = secret_key
         existing.is_active = True
+        existing.connected_at = now
     else:
         db.add(
             models.SocialAccount(
                 platform="youtube",
                 account_name=channel_title,
                 secrets_manager_arn=secret_key,
+                connected_at=now,
             )
         )
     db.commit()
