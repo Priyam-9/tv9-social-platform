@@ -1,9 +1,14 @@
 """
-Per-platform content limits, checked before anything is sent to a
-platform's API. These figures should be re-verified against each
-platform's live documentation periodically, since platforms change
-them without much notice — treat this as "best known as of the last
-check", not a permanent guarantee.
+Per-platform content limits and shared language validation.
+
+Content limits are checked before anything is sent to a platform's API.
+These figures should be re-verified against each platform's live
+documentation periodically, since platforms can change them without much
+notice.
+
+Language validation is intentionally centralized here so the backend and
+frontend can use one supported-language vocabulary rather than accepting
+arbitrary language strings.
 """
 
 PLATFORM_LIMITS = {
@@ -21,7 +26,68 @@ PLATFORM_LIMITS = {
 }
 
 
-def validate_content(platform: str, title: str | None, caption: str | None) -> list[str]:
+# Supported language codes used by the publisher.
+#
+# Keep this list intentionally small and explicit. The current dashboard
+# supports these language choices and the codes are stored in
+# SocialAccount.default_language / PostTarget.language.
+SUPPORTED_LANGUAGES = {
+    "en": "English",
+    "hi": "Hindi",
+    "te": "Telugu",
+    "bn": "Bengali",
+    "mr": "Marathi",
+    "ta": "Tamil",
+    "kn": "Kannada",
+    "ml": "Malayalam",
+}
+
+
+def normalize_language(language: str | None) -> str | None:
+    """
+    Normalize a language code for storage/comparison.
+
+    Returns None for an empty value. Supported values are lower-cased and
+    surrounding whitespace is removed.
+    """
+    if language is None:
+        return None
+
+    normalized = language.strip().lower()
+
+    if not normalized:
+        return None
+
+    return normalized
+
+
+def validate_language(language: str | None) -> list[str]:
+    """
+    Validate a language code.
+
+    Returns an empty list when the value is absent or supported, otherwise
+    returns one human-readable violation message.
+    """
+    normalized = normalize_language(language)
+
+    if normalized is None:
+        return []
+
+    if normalized not in SUPPORTED_LANGUAGES:
+        supported = ", ".join(SUPPORTED_LANGUAGES.keys())
+        return [
+            f"Unsupported language code '{normalized}'. "
+            f"Supported languages: {supported}"
+        ]
+
+    return []
+
+
+def validate_content(
+    platform: str,
+    title: str | None,
+    caption: str | None,
+) -> list[str]:
     """
     Returns a list of human-readable violation messages — empty if the
     content is within that platform's limits. A single post's title and
@@ -34,12 +100,14 @@ def validate_content(platform: str, title: str | None, caption: str | None) -> l
 
     if "title" in limits and title and len(title) > limits["title"]:
         violations.append(
-            f"Title is {len(title)} characters, exceeds {platform}'s {limits['title']}-character limit"
+            f"Title is {len(title)} characters, exceeds "
+            f"{platform}'s {limits['title']}-character limit"
         )
 
     if "caption" in limits and caption and len(caption) > limits["caption"]:
         violations.append(
-            f"Caption is {len(caption)} characters, exceeds {platform}'s {limits['caption']}-character limit"
+            f"Caption is {len(caption)} characters, exceeds "
+            f"{platform}'s {limits['caption']}-character limit"
         )
 
     return violations

@@ -1,9 +1,12 @@
 """
-Demo-only endpoints. NOT for production — these exist so you can show
-a live, believable walkthrough before the real platform adapters are
-built. seed_demo() creates fake accounts + posts; simulate_publish()
-advances pending post_targets to published/failed, standing in for
-the worker service that will do this for real in a later phase.
+Demo-only endpoints.
+
+These endpoints are NOT for production. They exist so you can show a live,
+believable walkthrough before the real platform adapters are built.
+
+Because seed/reset can create or delete data and simulate_publish can change
+publish state across accounts, every demo endpoint requires both the
+application API key and an authenticated administrator session.
 """
 
 import random
@@ -15,9 +18,17 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models
-from app.dependencies import verify_api_key
+from app.dependencies import verify_api_key, require_admin
 
-router = APIRouter(prefix="/demo", tags=["demo"], dependencies=[Depends(verify_api_key)])
+
+router = APIRouter(
+    prefix="/demo",
+    tags=["demo"],
+    dependencies=[
+        Depends(verify_api_key),
+        Depends(require_admin),
+    ],
+)
 
 DEMO_PLATFORMS = [
     ("youtube", "TV9 Main Channel"),
@@ -47,16 +58,22 @@ DEMO_POSTS = [
 
 @router.post("/seed")
 def seed_demo(db: Session = Depends(get_db)):
-    """Creates demo accounts (if missing) and a few demo posts targeting
-    all of them, so the dashboard has something to show immediately."""
-
+    """
+    Creates demo accounts if missing and a few demo posts targeting all
+    of them, so the dashboard has something to show immediately.
+    """
     accounts = []
+
     for platform, name in DEMO_PLATFORMS:
         existing = (
             db.query(models.SocialAccount)
-            .filter(models.SocialAccount.platform == platform, models.SocialAccount.account_name == name)
+            .filter(
+                models.SocialAccount.platform == platform,
+                models.SocialAccount.account_name == name,
+            )
             .first()
         )
+
         if not existing:
             existing = models.SocialAccount(
                 platform=platform,
@@ -65,9 +82,11 @@ def seed_demo(db: Session = Depends(get_db)):
             )
             db.add(existing)
             db.flush()
+
         accounts.append(existing)
 
     created_posts = []
+
     for demo_post in DEMO_POSTS:
         post = models.Post(
             title=demo_post["title"],
@@ -90,7 +109,11 @@ def seed_demo(db: Session = Depends(get_db)):
         created_posts.append(post.id)
 
     db.commit()
-    return {"accounts_created": len(accounts), "posts_created": len(created_posts)}
+
+    return {
+        "accounts_created": len(accounts),
+        "posts_created": len(created_posts),
+    }
 
 
 @router.post("/simulate")
@@ -99,17 +122,33 @@ def simulate_publish(db: Session = Depends(get_db)):
     Advances pending PostTargets one step, standing in for the real
     worker service. Call this repeatedly during a demo (or wire a
     button to it) to watch statuses change live:
-      pending -> publishing -> published (90%) or failed (10%)
+
+        pending -> publishing -> published (90%) or failed (10%)
     """
     advanced = []
 
-    publishing = db.query(models.PostTarget).filter(models.PostTarget.status == "pending").all()
+    publishing = (
+        db.query(models.PostTarget)
+        .filter(models.PostTarget.status == "pending")
+        .all()
+    )
+
     for target in publishing:
         target.status = "publishing"
         target.attempts += 1
-        advanced.append({"id": str(target.id), "new_status": "publishing"})
+        advanced.append(
+            {
+                "id": str(target.id),
+                "new_status": "publishing",
+            }
+        )
 
-    finishing = db.query(models.PostTarget).filter(models.PostTarget.status == "publishing").all()
+    finishing = (
+        db.query(models.PostTarget)
+        .filter(models.PostTarget.status == "publishing")
+        .all()
+    )
+
     for target in finishing:
         if random.random() < 0.9:
             target.status = "published"
@@ -118,9 +157,16 @@ def simulate_publish(db: Session = Depends(get_db)):
         else:
             target.status = "failed"
             target.error_message = "Simulated transient error (demo mode)"
-        advanced.append({"id": str(target.id), "new_status": target.status})
+
+        advanced.append(
+            {
+                "id": str(target.id),
+                "new_status": target.status,
+            }
+        )
 
     db.commit()
+
     return {"advanced": advanced}
 
 
@@ -128,23 +174,37 @@ def simulate_publish(db: Session = Depends(get_db)):
 def reset_demo(db: Session = Depends(get_db)):
     """
     Wipes ONLY demo-seeded data — posts created by seed_demo() and
-    accounts using the placeholder secret. Real connected accounts
-    (like an actual OAuth-connected YouTube channel) and real posts
-    created through the dashboard form are never touched by this,
-    no matter how many times it's run.
+    accounts using the placeholder secret.
+
+    Real connected accounts and real posts created through the dashboard
+    form are preserved.
     """
     demo_post_ids = [
-        p.id for p in db.query(models.Post).filter(models.Post.created_by == "demo-seed").all()
+        p.id
+        for p in (
+            db.query(models.Post)
+            .filter(models.Post.created_by == "demo-seed")
+            .all()
+        )
     ]
+
     if demo_post_ids:
         db.query(models.PostTarget).filter(
             models.PostTarget.post_id.in_(demo_post_ids)
         ).delete(synchronize_session=False)
-        db.query(models.Post).filter(models.Post.id.in_(demo_post_ids)).delete(synchronize_session=False)
+
+        db.query(models.Post).filter(
+            models.Post.id.in_(demo_post_ids)
+        ).delete(synchronize_session=False)
 
     db.query(models.SocialAccount).filter(
         models.SocialAccount.secrets_manager_arn == "demo-placeholder"
     ).delete(synchronize_session=False)
 
     db.commit()
-    return {"status": "reset (demo data only — real accounts and real posts are preserved)"}
+
+    return {
+        "status": (
+            "reset (demo data only — real accounts and real posts are preserved)"
+        )
+    }

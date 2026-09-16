@@ -11,3 +11,5 @@ google-api-python-client==2.149.0
 google-auth-httplib2==0.2.0
 slowapi==0.1.9
 httpx==0.28.1
+python-multipart==0.0.20
+boto3==1.40.31
