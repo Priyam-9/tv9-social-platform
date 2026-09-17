@@ -19,7 +19,7 @@ The backend is built with FastAPI and PostgreSQL. Platform-specific publishing i
 - Docker Compose local environment
 - Web-based publishing dashboard
 - Email/password authentication
-- Database-backed sessions
+- Database-backed sessions with HttpOnly cookies
 - Role-based access control
 - Admin and Content Manager roles
 - User-to-account access control
@@ -29,11 +29,14 @@ The backend is built with FastAPI and PostgreSQL. Platform-specific publishing i
 - Retry/attempt tracking
 - YouTube publishing
 - YouTube OAuth connection
+- YouTube OAuth account ownership binding
 - YouTube tags
 - YouTube privacy and category settings
 - Custom YouTube thumbnails
 - Telegram publishing
 - Telegram to YouTube target linking
+- Telegram account connection and user grant
+- Stable account identity handling for reconnects
 - Language validation
 - Channel default language
 - Per-post language override
@@ -43,16 +46,21 @@ The backend is built with FastAPI and PostgreSQL. Platform-specific publishing i
 - Audit logging
 - Local secrets storage
 - Secrets Manager abstraction for non-local environments
+- Publish request error handling
+- Duplicate publish-submission protection
+- Session-expiry handling in the dashboard
+- Visible publishing error/status feedback
+- Visibility-aware dashboard polling
+- Dashboard UI hierarchy and status-indicator cleanup
 
 ### In progress
 
 - Instagram publishing
 - Facebook publishing
 - X publishing
-- Further dashboard improvements
-- Additional cleanup and testing
+- Production infrastructure and deployment
 
-Production infrastructure and deployment are maintained separately from the local application setup.
+The local application baseline is being prepared for manager review. Final end-to-end smoke testing should be completed in the target environment before production deployment.
 
 ---
 
@@ -385,6 +393,36 @@ The application does not rely on a client-supplied user email header for authent
 
 ---
 
+# Security and Access Hardening
+
+The recent hardening pass tightened the boundaries between authentication, authorization, connected accounts, and publishing.
+
+## Session security
+
+- Authentication is resolved from the server-side session cookie.
+- The database stores only a hash of the session token.
+- Invalid or expired sessions are rejected.
+- Logout invalidates the server-side session.
+
+## Role and account authorization
+
+- `User.role` is the authoritative role field.
+- Administrators have unrestricted account visibility.
+- Content Managers receive explicit `UserAccountAccess` grants.
+- Protected publishing actions are authorized server-side; hiding an account in the dashboard is not treated as security.
+
+## OAuth ownership
+
+A YouTube OAuth flow is associated with the authenticated dashboard user. When a channel is connected successfully, the resulting `SocialAccount` is granted to the user who completed the connection.
+
+OAuth credentials remain outside the relational database. The database stores only the configured secrets-store pointer.
+
+## Publishing safeguards
+
+The dashboard now checks publish responses, surfaces failures to the user, prevents rapid duplicate submissions, and avoids overlapping rundown polling requests.
+
+---
+
 # Publishing Model
 
 The application separates a post from its platform targets.
@@ -697,7 +735,7 @@ docker compose exec db psql -U tv9 -d tv9_publisher
 
 # Development Checks
 
-After changes, the following checks should be run as appropriate:
+After changes, run the following baseline checks:
 
 ```powershell
 docker compose config
@@ -705,25 +743,44 @@ docker compose ps
 docker compose exec api python -m compileall -q app
 docker compose exec api python -c "from app.main import app; print('FULL APPLICATION IMPORT OK')"
 docker compose exec api alembic current
+docker compose exec api alembic heads
 ```
 
-For changes involving authentication or authorization, also check:
+Check the health endpoint:
+
+```powershell
+curl.exe -i http://localhost:8000/health
+```
+
+Expected:
+
+```json
+{"status":"healthy","environment":"local"}
+```
+
+For authentication or authorization changes, also check:
 
 - admin login
 - content-manager login
 - admin-only endpoints
 - account scoping
+- unauthenticated OAuth protection
+- OAuth-created account ownership
 - logout/session invalidation
 
-For language changes, check:
+For dashboard changes, check:
 
-- valid language codes
-- invalid language rejection
-- default language
-- target language override
-- Telegram language behavior
+- hard refresh behavior
+- duplicate-submit protection
+- publish error visibility
+- rundown polling
+- tab visibility pause/resume
+- light/dark mode
+- browser console errors
 
-For publishing changes, check the affected platform without assuming unrelated targets were changed.
+For publishing changes, test the affected platform and confirm unrelated targets retain their own state.
+
+For schema changes, verify the migration chain against a fresh temporary database before merging.
 
 ---
 
@@ -817,28 +874,44 @@ docker compose logs -f api
 Before committing:
 
 ```powershell
-git status
-git diff
+git status --short
+git diff --check
 ```
 
-Make sure local configuration and credentials are not staged.
+Make sure local configuration and credentials are not staged. In particular, never commit:
 
-Stage the intended files:
+```text
+.env
+.local_secrets.json
+OAuth tokens
+refresh tokens
+API keys
+platform credentials
+```
+
+Stage only the intended application files:
 
 ```powershell
 git add <files>
 ```
 
-Commit:
+Review exactly what will be committed:
+
+```powershell
+git diff --cached --stat
+git diff --cached
+```
+
+Commit with a descriptive message:
 
 ```powershell
 git commit -m "describe the change"
 ```
 
-Push:
+Push the current branch:
 
 ```powershell
-git push
+git push -u origin HEAD
 ```
 
 ---
@@ -858,12 +931,46 @@ The current local baseline has been checked for:
 - session handling
 - roles and permissions
 - account scoping
+- YouTube OAuth protection
+- YouTube OAuth account ownership
+- account reconnect/deduplication handling
 - language validation
 - default language
 - Telegram language behavior
 - YouTube publishing
 - Telegram publishing
-- content-limit validation
+- platform content-limit validation
+- dashboard publish error handling
+- duplicate submission protection
+- rundown polling behavior
 - health endpoint
 
-The application is being developed incrementally, with feature work and cleanup being tested as changes are introduced.
+Latest verified local Alembic revision:
+
+```text
+c4f2a7d91e63
+```
+
+The application is being developed incrementally. This repository represents the current local application baseline; Instagram, Facebook, X, and production infrastructure remain separate workstreams.
+
+
+---
+
+# Review Notes
+
+The current checkpoint focuses on the core publishing workflow and its security/access boundaries.
+
+The main completed work in this checkpoint is:
+
+- authenticated, role-aware dashboard access
+- explicit account-level permissions
+- protected YouTube OAuth with user ownership
+- safer connected-account handling
+- reliable publish/error feedback
+- duplicate submission protection
+- improved dashboard refresh/polling behavior
+- final dashboard hierarchy and status styling cleanup
+
+The remaining major feature work is platform expansion for Instagram, Facebook, and X, followed by production deployment/infrastructure work.
+
+Platform credentials and local environment configuration must be supplied separately and must not be committed to the repository.
