@@ -28,12 +28,12 @@
         --muted: #B9C2D1;
         --dim: #738198;
 
-        /* Existing semantic names mapped to the TV9 palette */
+        /* Brand accent + true semantic status colors */
         --crimson: var(--tv9-amber);
-        --crimson-glow: rgba(217, 154, 43, 0.28);
-        --green: var(--tv9-blue);
-        --amber: var(--tv9-amber);
-        --red: var(--tv9-amber);
+        --crimson-glow: rgba(230, 25, 60, 0.18);
+        --green: #22C55E;
+        --amber: #F59E0B;
+        --red: #EF4444;
         --blue: var(--tv9-blue);
 
         --radius: 14px;
@@ -365,11 +365,8 @@
         line-height: 1.55;
         padding: 12px 14px;
         transition:
-          height 0.18s ease,
-          min-height 0.18s ease,
           border-color 0.15s ease,
           box-shadow 0.15s ease;
-        will-change: height;
       }
 
       .cf-main-title {
@@ -602,36 +599,11 @@
         .target-card-body .field-block:has(.target-dropzone) { grid-area: media; }
         .target-card-body .field-block:has(.target-thumbnail-dropzone) { grid-area: thumbnail; }
         .target-card-body .language-review-note { grid-area: note; }
-        .target-card-body .telegram-content-note { grid-area: note; }
       }
       .target-card-body label.field-label {
         font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--dim);
         text-transform: uppercase; letter-spacing: 0.5px;
       }
-      .target-card-body .telegram-linked-field {
-        background: #151922;
-        border-color: var(--border-soft);
-        color: var(--muted);
-        cursor: not-allowed;
-      }
-
-      .target-card-body .telegram-linked-field:focus {
-        outline: none;
-        border-color: var(--border-soft);
-        box-shadow: none;
-      }
-
-      .telegram-content-note {
-        grid-area: note;
-        padding: 9px 11px;
-        border: 1px dashed var(--border-soft);
-        border-radius: 6px;
-        background: rgba(59, 96, 197, 0.035);
-        color: var(--dim);
-        font-size: 11px;
-        line-height: 1.45;
-      }
-
       .target-card-body textarea {
         width: 100%;
         min-height: 64px;
@@ -648,10 +620,8 @@
         color: var(--text);
         font-family: inherit;
         transition:
-          height 0.18s ease,
           border-color 0.15s ease,
           box-shadow 0.15s ease;
-        will-change: height;
       }
 
       .target-card-body .cf-target-tags {
@@ -901,6 +871,155 @@
       .retry-btn { border-color: var(--amber) !important; color: var(--amber) !important; }
       .retry-btn:hover { background: rgba(251, 191, 36, 0.1) !important; }
 
+
+      .connections-panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+        margin-bottom: 22px;
+      }
+      .connections-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 13px;
+      }
+      .connections-title {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 21px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .connections-subtitle {
+        color: var(--dim);
+        font-size: 11px;
+        line-height: 1.45;
+        margin-top: 2px;
+      }
+      .connections-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .connection-card {
+        min-width: 0;
+        padding: 13px 14px;
+        border: 1px solid var(--border-soft);
+        border-radius: 10px;
+        background: rgba(11, 18, 32, 0.20);
+      }
+      .connection-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .connection-youtube-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        flex: 0 0 auto;
+      }
+      .connection-youtube-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .connection-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .connection-card-copy {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+        margin-bottom: 10px;
+      }
+      .connection-actions {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .connection-form {
+        display: grid;
+        gap: 8px;
+      }
+      .connection-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .connection-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .connection-field label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.45px;
+      }
+      .connection-field input,
+      .connection-field select {
+        width: 100%;
+        min-width: 0;
+        background: #1a1e25;
+        border: 1px solid var(--border-soft);
+        border-radius: 6px;
+        padding: 8px 9px;
+        color: var(--text);
+        font: inherit;
+        font-size: 12px;
+      }
+      .connection-field input:focus,
+      .connection-field select:focus {
+        outline: none;
+        border-color: var(--crimson);
+        box-shadow: 0 0 0 3px var(--crimson-glow);
+      }
+      .connection-hint {
+        color: var(--dim);
+        font-size: 10px;
+        line-height: 1.4;
+        margin-top: 2px;
+      }
+      .connection-status {
+        min-height: 16px;
+        color: var(--dim);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9.5px;
+        line-height: 1.35;
+      }
+      .connection-status.success { color: var(--green); }
+      .connection-status.error { color: var(--red); }
+      .connection-status.working { color: var(--amber); }
+      body.light-mode .connections-panel .connection-card {
+        background: rgba(253, 242, 222, 0.48);
+      }
+      body.light-mode .connection-field input,
+      body.light-mode .connection-field select {
+        background: #FFF9EE;
+        color: var(--text);
+      }
+      @media (max-width: 820px) {
+        .connections-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 520px) {
+        .connection-form-row { grid-template-columns: 1fr; }
+      }
+
       .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
       .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; transition: border-color 0.2s ease, transform 0.15s ease; }
       .kpi-card:hover { transform: translateY(-1px); border-color: #2e3340; }
@@ -995,7 +1114,6 @@
         to { opacity: 0; transform: translateY(8px); }
       }
 
-      /* ---------- Pre-publish preview modal ---------- */
       /* ---------- Pre-publish preview modal ---------- */
       .preview-modal-card {
         width: min(1040px, 88vw);
@@ -1918,7 +2036,631 @@
       .auth-error.show { display: block; }
       .session-actions { display: flex; gap: 8px; align-items: center; }
 
-    </style>
+            /* ---------- P3.6 consolidated final visual system ---------- */
+      :root {
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 24px;
+        --space-6: 32px;
+        --crimson-glow: rgba(230, 25, 60, 0.18);
+        --green: #22C55E;
+        --amber: #F59E0B;
+        --red: #EF4444;
+      }
+
+:root {
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 16px;
+        --space-4: 24px;
+        --space-5: 32px;
+        --crimson-glow: rgba(230, 25, 60, 0.18);
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 24px;
+        --space-6: 32px;
+      }
+      body {
+        max-width: 1480px;
+        padding: var(--space-4) clamp(20px, 3vw, var(--space-5)) 72px;
+        background: radial-gradient(1000px 540px at 0% -16%, rgba(59, 96, 197, 0.12), transparent 62%),
+          var(--bg);
+        max-width: 1320px;
+        padding: 18px 24px 64px;
+        background: var(--bg);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 14px 0 12px;
+        margin-bottom: 20px;
+        border-bottom: 0;
+        background: linear-gradient(180deg, rgba(11, 18, 32, 0.96) 72%, rgba(11, 18, 32, 0));
+        backdrop-filter: blur(10px);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 24px;
+        padding: 4px 0 14px;
+        margin-bottom: 22px;
+        border-bottom: 1px solid var(--border-soft);
+        background: var(--bg);
+        backdrop-filter: none;
+      }
+      .brand-row {
+        gap: var(--space-2);
+        gap: 9px;
+      }
+      h1 {
+        font-size: 28px;
+        font-size: 27px;
+        letter-spacing: 0.35px;
+      }
+      .subline {
+        margin-top: var(--space-2);
+        margin: 4px 0 0;
+        font-size: 10px;
+      }
+      .user-switcher {
+        margin-top: var(--space-2);
+        padding: 8px 10px 8px 12px;
+        background: transparent;
+        border-color: var(--border-soft);
+        box-shadow: none;
+        display: inline-flex;
+        width: fit-content;
+        max-width: max-content;
+        margin-top: 7px;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .controls {
+        gap: var(--space-2);
+      }
+      button {
+        transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease;
+      }
+      button:active {
+        transform: none;
+        opacity: 0.82;
+      }
+      button.primary, .controls button:not(.secondary) {
+        box-shadow: none;
+      }
+      button.primary:hover, .controls button:not(.secondary):hover {
+        box-shadow: none;
+      }
+      .create-panel {
+        margin-bottom: var(--space-4);
+        padding: 20px clamp(18px, 2vw, var(--space-4)) 22px;
+        background: var(--card);
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 18px 46px -40px rgba(0, 0, 0, 0.95);
+        margin-bottom: 28px;
+        padding: 22px 24px 20px;
+        background: var(--card);
+        border: 1px solid var(--border-soft);
+        border-radius: 12px;
+        box-shadow: none;
+      }
+      .create-panel::before,
+      .create-panel::after {
+        display: none;
+      }
+      .panel-actions {
+        padding-top: var(--space-3);
+        border-top: 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding-top: 4px;
+      }
+      .dropzone, .upload-card {
+        border-color: var(--border-soft);
+        box-shadow: none;
+      }
+      .dropzone:hover, .dropzone-mini:hover {
+        background: rgba(59, 96, 197, 0.04);
+      }
+      .target-card, .connection-card, .kpi-card, .post-card, .target {
+        box-shadow: none;
+      }
+      .target-card:hover, .target:hover, .post-card:hover, .kpi-card:hover {
+        transform: none;
+      }
+      .post-card::after {
+        display: none;
+      }
+      .yt-strip {
+        margin-bottom: var(--space-3);
+        padding: 0;
+        background: transparent;
+        border: 0;
+        margin: 0 0 18px;
+        padding: 0;
+      }
+      .yt-chip {
+        padding: 6px 10px 6px 8px;
+        background: var(--card);
+        border-color: var(--border-soft);
+        padding: 5px 9px 5px 7px;
+        border-radius: 999px;
+        background: transparent;
+        border: 1px solid var(--border-soft);
+      }
+      .yt-chip:hover {
+        transform: none;
+        border-color: var(--border);
+      }
+      #oauth-warning-banner {
+        margin-top: 0;
+        margin-bottom: var(--space-3);
+        border-radius: 10px;
+        background: rgba(230, 25, 60, 0.07);
+        border-color: rgba(230, 25, 60, 0.20);
+        margin-bottom: 16px;
+      }
+      .connections-panel {
+        margin-bottom: var(--space-4);
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+      }
+      .connections-summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding: 12px 2px;
+        cursor: pointer;
+        user-select: none;
+        padding: 9px 0;
+      }
+      .connections-summary::-webkit-details-marker {
+        display: none;
+      }
+      .connections-summary::marker {
+        display: none;
+      }
+      .connections-summary-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--tv9-blue);
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 11px;
+      }
+      .connections-summary-chevron {
+        display: inline-block;
+        transition: transform 140ms ease;
+      }
+      .connections-collapsible[open] .connections-summary {
+        padding-bottom: 16px;
+      }
+      .connections-collapsible[open] .connections-summary-chevron {
+        transform: rotate(180deg);
+      }
+      .connections-inner {
+        background: var(--card);
+        border: 1px solid var(--border-soft);
+        border-radius: 14px;
+        padding: 16px;
+        padding: 14px;
+        border-radius: 10px;
+      }
+      .connections-head {
+        margin-bottom: var(--space-3);
+      }
+      .connections-title {
+        font-size: 19px;
+        font-size: 15px;
+      }
+      .connections-subtitle {
+        max-width: 720px;
+        font-size: 11px;
+      }
+      .connection-card {
+        padding: 12px;
+        background: var(--bg);
+        border: 0;
+        border-radius: 10px;
+        padding: 12px;
+        border: 1px solid var(--border-soft);
+        border-radius: 9px;
+        background: transparent;
+      }
+      .connection-card-copy {
+        margin-bottom: var(--space-3);
+        color: var(--muted);
+      }
+      .connection-field input,
+      .connection-field select {
+        background: var(--card);
+      }
+      .connection-submit-field {
+        justify-content: flex-end;
+      }
+      .kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        margin-bottom: var(--space-5);
+        background: var(--card);
+        border: 1px solid var(--border-soft);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 24px;
+        border-radius: 9px;
+        background: transparent;
+        border: 1px solid var(--border-soft);
+      }
+      .kpi-card {
+        min-width: 0;
+        background: transparent;
+        border: 0 !important;
+        border-right: 1px solid var(--border-soft) !important;
+        border-radius: 0;
+        padding: 13px 16px;
+        padding: 10px 14px;
+      }
+      .kpi-card:last-child {
+        border-right: 0 !important;
+      }
+      .kpi-value {
+        font-size: 26px;
+        font-size: 23px;
+      }
+      .rundown-head {
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      .rundown-head .line {
+        display: none;
+      }
+      .eyebrow {
+        font-size: 10px;
+      }
+      .posts {
+        gap: var(--space-3);
+        gap: 10px;
+      }
+      .post-card {
+        background: var(--card);
+        border: 0;
+        border-radius: 12px;
+        padding: 14px 14px 14px 0;
+        border-radius: 10px;
+        background: var(--card);
+        border-color: var(--border-soft);
+        box-shadow: none;
+      }
+      .seg-number {
+        border-right: 0;
+        width: 44px;
+        width: 42px;
+        border-right: 1px solid var(--border-soft);
+        font-size: 10px;
+      }
+      .post-body {
+        padding-left: 16px;
+        padding-left: 14px;
+      }
+      @media (max-width: 820px) {
+        .kpi-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .kpi-card:nth-child(2) {
+          border-right: 0 !important;
+        }
+        .kpi-card:nth-child(-n/**/+2) {
+          border-bottom: 1px solid var(--border-soft) !important;
+        }
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: 16px 14px 60px;
+        }
+        header {
+          padding-top: 10px;
+        }
+        .connections-summary {
+          align-items: flex-start;
+        }
+        .connections-summary-action {
+          padding-top: 2px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      .live-dot {
+        width: 7px;
+        height: 7px;
+        animation: none;
+        box-shadow: none;
+      }
+      .user-pill {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      .user-pill .dot {
+        width: 5px;
+        height: 5px;
+      }
+      header .controls {
+        justify-content: flex-end;
+        gap: 6px;
+      }
+      header .controls button {
+        padding: 7px 11px;
+        font-size: 12px;
+        border-radius: 7px;
+        background: transparent !important;
+        border: 1px solid var(--border) !important;
+        color: var(--muted) !important;
+        box-shadow: none !important;
+      }
+      header .controls button:hover {
+        border-color: var(--dim) !important;
+        color: var(--text) !important;
+        background: rgba(255,255,255,0.03) !important;
+      }
+      header .controls .developer-action {
+        color: var(--dim) !important;
+        border-style: dashed !important;
+      }
+      .panel-title {
+        margin-bottom: 16px;
+        color: var(--text);
+        font-size: 14px;
+        letter-spacing: 0.8px;
+      }
+      .panel-fields {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 14px;
+      }
+      .panel-fields > .field-with-counter:nth-child(1),
+      .panel-fields > .field-with-counter:nth-child(2),
+      .panel-fields > .field-with-counter:nth-child(3) {
+        grid-column: 1 / -1;
+        grid-row: auto;
+      }
+      .field-with-counter textarea,
+      .cf-main-title,
+      .cf-main-caption,
+      .cf-main-tags {
+        border-radius: 8px;
+      }
+      .cf-main-title {
+        min-height: 76px;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+      .cf-main-caption {
+        min-height: 126px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .cf-main-tags {
+        min-height: 48px;
+        font-size: 12px;
+      }
+      .yt-settings-grid {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 210px 280px;
+        gap: 14px;
+        align-items: start;
+      }
+      .yt-setting-field select {
+        width: 100%;
+      }
+      .yt-setting-hint {
+        max-width: 290px;
+      }
+      .media-tool-row {
+        gap: 14px;
+      }
+      .upload-card {
+        padding: 12px;
+        background: transparent;
+        border: 1px solid var(--border-soft);
+        border-radius: 10px;
+      }
+      .upload-card-label {
+        margin-bottom: 8px;
+        font-size: 9px;
+      }
+      .dropzone {
+        min-height: 70px;
+        border-radius: 8px;
+      }
+      .upload-status-row {
+        margin-top: 7px;
+      }
+      .upload-card-hint {
+        margin-top: 7px;
+      }
+      .panel-fields > .panel-subtitle {
+        margin-top: 2px;
+        margin-bottom: 0;
+      }
+      .schedule-row {
+        gap: 10px;
+        padding: 8px 0 0;
+      }
+      .schedule-radio {
+        padding: 6px 9px;
+        border-radius: 7px;
+      }
+      .premium-picker {
+        margin-top: 8px;
+      }
+      .target-select-list {
+        gap: 8px;
+      }
+      .target-card {
+        background: transparent;
+        border: 1px solid var(--border-soft);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .target-card.expanded {
+        background: rgba(59, 96, 197, 0.04);
+        border-color: rgba(59, 96, 197, 0.38);
+        box-shadow: none;
+      }
+      .target-card-body {
+        margin-top: 10px;
+        padding-top: 10px;
+      }
+      .panel-actions button {
+        min-width: 92px;
+      }
+      .panel-actions button.primary,
+      .panel-actions button:not(.secondary) {
+        box-shadow: none !important;
+      }
+      .yt-strip-label {
+        margin-right: 2px;
+      }
+      .yt-chip .yt-chip-live {
+        animation: none;
+        box-shadow: none;
+      }
+      .connections-collapsible {
+        margin-bottom: 22px;
+      }
+      .connections-grid {
+        gap: 12px;
+      }
+      .kpi-label {
+        font-size: 9px;
+      }
+      .rundown-head .eyebrow {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .rundown-head select {
+        max-width: 170px !important;
+      }
+      .rundown-status {
+        min-height: 18px;
+        margin: -2px 0 10px;
+        color: var(--dim);
+        font-size: 10.5px;
+        line-height: 1.4;
+      }
+      .rundown-status.error {
+        color: var(--red);
+      }
+      .rundown-status.success {
+        color: var(--green);
+      }
+      .post-title {
+        font-size: 18px;
+      }
+      .post-caption {
+        margin: 3px 0 10px;
+        font-size: 12px;
+      }
+      .targets {
+        gap: 10px;
+      }
+      .target {
+        padding: 11px;
+        border-radius: 8px;
+        background: transparent;
+        border-color: var(--border-soft);
+      }
+      .target-main strong {
+        font-size: 10px;
+      }
+      .target-status {
+        font-size: 10px;
+      }
+      .target-detail-grid {
+        gap: 6px;
+        margin-top: 9px;
+      }
+      .target-detail {
+        padding: 7px 8px;
+        border-radius: 7px;
+        background: rgba(255,255,255,0.012);
+      }
+      .target-detail-label {
+        font-size: 8px;
+      }
+      .target-detail-value {
+        font-size: 10px;
+      }
+      @media (max-width: 920px) {
+        body {
+          padding-inline: 18px;
+        }
+        header {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        header .controls {
+          justify-content: flex-start;
+        }
+        .yt-settings-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 680px) {
+        body {
+          padding-inline: 14px;
+        }
+        .create-panel {
+          padding: 18px 16px;
+        }
+        .yt-settings-grid {
+          grid-template-columns: 1fr;
+        }
+        .media-tool-row {
+          grid-template-columns: 1fr;
+        }
+        .kpi-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .kpi-card:nth-child(2) {
+          border-right: 0 !important;
+        }
+        .kpi-card:nth-child(-n/**/+2) {
+          border-bottom: 1px solid var(--border-soft) !important;
+        }
+      }
+</style>
   </head>
   <body>
     <header>
@@ -1941,8 +2683,8 @@
       <div class="controls">
         <button class="secondary theme-toggle" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch to light mode">☀ Light mode</button>
         <button class="secondary" type="button" onclick="logoutUser()">Log out</button>
-        <button class="secondary" onclick="callDemo('reset')">Reset</button>
-        <button class="secondary" onclick="callDemo('seed')">Seed demo data</button>
+        <button class="secondary developer-action" onclick="callDemo('reset')">Reset</button>
+        <button class="secondary developer-action" onclick="callDemo('seed')">Seed demo data</button>
       </div>
     </header>
 
@@ -2073,12 +2815,12 @@
         </div>
 
         <div class="panel-subtitle">
-          Select target accounts — each channel uses its configured default language automatically. Choose another language to override it for this post. YouTube targets have editable title/caption fields; Telegram targets inherit those fields from the selected YouTube target and keep their language setting independently.
+          Select target accounts — each channel's language is pre-filled from its default (shown as a tag next to its name). Check a channel to write that channel's title/caption; publishing goes out to every checked channel at the same time.
         </div>
         <div id="cf-target-list" class="target-select-list"></div>
         <div class="panel-actions">
           <button class="secondary" onclick="openPreviewModal()">Preview</button>
-          <button onclick="createRealPost()">Create + publish now</button>
+          <button id="create-publish-btn" onclick="createRealPost()">Create + publish now</button>
         </div>
       </div>
     </div>
@@ -2092,6 +2834,88 @@
 
     <div id="oauth-warning-banner" style="display:none;"></div>
 
+    <details class="connections-panel connections-collapsible" id="connections-panel">
+      <summary class="connections-summary">
+        <div>
+          <div class="connections-title">Manage publishing accounts</div>
+          <div class="connections-subtitle">Connect your own YouTube or Telegram account for testing.</div>
+        </div>
+        <span class="connections-summary-action">Connect account <span class="connections-summary-chevron" aria-hidden="true">⌄</span></span>
+      </summary>
+
+      <div class="connections-inner">
+        <div class="connections-head">
+          <div>
+            <div class="connections-title">Publishing accounts</div>
+            <div class="connections-subtitle">Platform credentials stay inside the platform-specific connection flow.</div>
+          </div>
+          <div class="connection-actions">
+            <button class="secondary" type="button" onclick="refreshConnectedAccounts()">Refresh accounts</button>
+          </div>
+        </div>
+
+        <div class="connections-grid">
+          <div class="connection-card">
+            <div class="connection-card-head">
+              <div class="connection-card-title"><span class="connection-youtube-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.5 6.2s-.2-1.6-.9-2.3c-.9-.9-1.9-.9-2.3-1C17.3 2.6 12 2.6 12 2.6h0s-5.3 0-8.3.3c-.4 0-1.4.1-2.3 1-.7.7-.9 2.3-.9 2.3S.2 8.1.2 10v1.9c0 1.9.2 3.8.2 3.8s.2 1.6.9 2.3c.9.9 2 .9 2.5 1 1.8.2 7.7.3 7.7.3s5.3 0 8.3-.3c.4 0 1.4-.1 2.3-1 .7-.7.9-2.3.9-2.3s.2-1.9.2-3.8V10c0-1.9-.2-3.8-.2-3.8z" fill="#FF0033"/><path d="M9.6 14.1V7.9l6 3.1-6 3.1z" fill="#fff"/></svg>
+              </span><span>YouTube</span></div>
+            </div>
+            <div class="connection-card-copy">Connect the Google account that owns the YouTube channel you want to test. The channel is discovered after OAuth.</div>
+            <div class="connection-actions">
+              <button type="button" onclick="connectYouTubeAccount()">Connect YouTube with Google</button>
+              <button class="secondary" type="button" onclick="refreshConnectedAccounts()">Refresh</button>
+            </div>
+            <div id="youtube-connection-status" class="connection-status">No new connection started.</div>
+          </div>
+
+          <div class="connection-card">
+            <div class="connection-card-head">
+              <div class="connection-card-title"><span>Telegram</span></div>
+            </div>
+            <div class="connection-card-copy">Connect a Telegram channel or group with a bot token and chat ID. The bot must have permission to post.</div>
+            <form class="connection-form" id="telegram-connect-form" onsubmit="connectTelegramAccount(event)">
+              <div class="connection-field">
+                <label for="telegram-bot-token">Bot token</label>
+                <input id="telegram-bot-token" type="password" autocomplete="off" required maxlength="512" placeholder="BotFather token" />
+              </div>
+              <div class="connection-form-row">
+                <div class="connection-field">
+                  <label for="telegram-chat-id">Chat ID</label>
+                  <input id="telegram-chat-id" type="text" autocomplete="off" required maxlength="255" placeholder="e.g. -1001234567890" />
+                </div>
+                <div class="connection-field">
+                  <label for="telegram-account-name">Account name (optional)</label>
+                  <input id="telegram-account-name" type="text" maxlength="255" placeholder="Display name" />
+                </div>
+              </div>
+              <div class="connection-form-row">
+                <div class="connection-field">
+                  <label for="telegram-default-language">Default language (optional)</label>
+                  <select id="telegram-default-language">
+                    <option value="">No default</option>
+                    <option value="en">English (en)</option>
+                    <option value="hi">Hindi (hi)</option>
+                    <option value="te">Telugu (te)</option>
+                    <option value="bn">Bengali (bn)</option>
+                    <option value="mr">Marathi (mr)</option>
+                    <option value="ta">Tamil (ta)</option>
+                    <option value="kn">Kannada (kn)</option>
+                    <option value="ml">Malayalam (ml)</option>
+                  </select>
+                </div>
+                <div class="connection-field connection-submit-field">
+                  <button type="submit">Connect Telegram</button>
+                </div>
+              </div>
+            </form>
+            <div id="telegram-connection-status" class="connection-status">Nothing connected yet.</div>
+            <div class="connection-hint">The bot token is sent only to the authenticated API endpoint and is not shown back after connection.</div>
+          </div>
+        </div>
+      </div>
+    </details>
+
     <div id="kpi-strip" class="kpi-strip">
       <div class="kpi-card total"><span class="kpi-value" id="kpi-total">–</span><span class="kpi-label">Total posts</span></div>
       <div class="kpi-card published"><span class="kpi-value" id="kpi-published">–</span><span class="kpi-label">Published</span></div>
@@ -2104,6 +2928,7 @@
       <select id="lang-filter" onchange="onLanguageFilterChange()" style="max-width:200px;"></select>
       <span class="line"></span>
     </div>
+    <div id="rundown-status" class="rundown-status" aria-live="polite"></div>
 
     <div id="posts" class="posts"></div>
 
@@ -2154,11 +2979,15 @@
       let TARGET_THUMBNAIL_UPLOAD_HISTORY = {};
       let CURRENT_THEME = localStorage.getItem("tv9_theme") || "dark";
       let TARGET_LANGUAGE_STATE = {};
+      let CURRENT_USER = null;
+      let POSTS_POLL_TIMER = null;
+      let POSTS_FETCH_IN_FLIGHT = false;
+      let CREATE_SUBMIT_IN_FLIGHT = false;
 
       const CHAR_LIMITS = {
         youtube_title: 100,
         youtube_caption: 5000,
-        telegram_caption: 1024,
+        telegram_caption: 4096,
         default_title: 100,
         default_caption: 5000,
       };
@@ -2268,6 +3097,11 @@
             throw new Error(body.detail || "Invalid email or password.");
           }
 
+          CURRENT_USER = body.user || {
+            email,
+            role: body.role,
+            is_admin: body.is_admin,
+          };
           hideLoginScreen();
           await startDashboard();
         } catch (err) {
@@ -2279,6 +3113,8 @@
       }
 
       async function logoutUser() {
+        stopPostPolling();
+        CURRENT_USER = null;
         try {
           await fetch("/auth/logout", {
             method: "POST",
@@ -2399,7 +3235,14 @@
         const pill = document.getElementById("user-pill");
         const pillText = document.getElementById("user-pill-text");
         pill.className = AUTHENTICATED ? "user-pill" : "user-pill unrestricted";
-        pillText.textContent = AUTHENTICATED ? "Authenticated session" : "Signed out";
+        if (!AUTHENTICATED) {
+          pillText.textContent = "Signed out";
+          return;
+        }
+
+        const name = CURRENT_USER?.display_name || CURRENT_USER?.email || "Authenticated session";
+        const role = CURRENT_USER?.role ? ` · ${CURRENT_USER.role.replaceAll("_", " ")}` : "";
+        pillText.textContent = `${name}${role}`;
       }
 
       const YT_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.5 6.2s-.2-1.6-.9-2.3c-.9-.9-1.9-.9-2.3-1C17.3 2.6 12 2.6 12 2.6h0s-5.3 0-8.3.3c-.4 0-1.4.1-2.3 1-.7.7-.9 2.3-.9 2.3S.2 8.1.2 10v1.9c0 1.9.2 3.8.2 3.8s.2 1.6.9 2.3c.9.9 2 .9 2.5 1 1.8.2 7.7.3 7.7.3s5.3 0 8.3-.3c.4 0 1.4-.1 2.3-1 .7-.7.9-2.3.9-2.3s.2-1.9.2-3.8V10c0-1.9-.2-3.8-.2-3.8z" fill="#FF0033"/><path d="M9.6 14.1V7.9l6 3.1-6 3.1z" fill="#fff"/></svg>`;
@@ -2412,6 +3255,91 @@
         if (!connectedAt) return null;
         const ms = Date.now() - new Date(connectedAt).getTime();
         return ms / (1000 * 60 * 60 * 24);
+      }
+
+
+      function setConnectionStatus(id, message, state = "") {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = message;
+        el.className = `connection-status${state ? ` ${state}` : ""}`;
+      }
+
+      function connectYouTubeAccount() {
+        setConnectionStatus("youtube-connection-status", "Google OAuth opened in a new tab. Finish consent there, then refresh accounts here.", "working");
+        const popup = window.open("/auth/youtube/login", "tv9-youtube-connect", "noopener,noreferrer");
+        if (!popup) {
+          setConnectionStatus("youtube-connection-status", "The browser blocked the OAuth window. Allow pop-ups for this dashboard and try again.", "error");
+        }
+      }
+
+      async function refreshConnectedAccounts() {
+        setConnectionStatus("youtube-connection-status", "Refreshing accounts…", "working");
+        try {
+          await loadAccounts();
+          await loadYoutubeChannels();
+          setConnectionStatus("youtube-connection-status", "Account list refreshed.", "success");
+        } catch (err) {
+          setConnectionStatus("youtube-connection-status", err.message || "Could not refresh accounts.", "error");
+        }
+      }
+
+      async function connectTelegramAccount(event) {
+        event?.preventDefault();
+        const botTokenEl = document.getElementById("telegram-bot-token");
+        const chatIdEl = document.getElementById("telegram-chat-id");
+        const accountNameEl = document.getElementById("telegram-account-name");
+        const languageEl = document.getElementById("telegram-default-language");
+        const botToken = botTokenEl.value.trim();
+        const chatId = chatIdEl.value.trim();
+        const accountName = accountNameEl.value.trim();
+        const defaultLanguage = languageEl.value;
+
+        if (!botToken || !chatId) {
+          setConnectionStatus("telegram-connection-status", "Bot token and chat ID are required.", "error");
+          return;
+        }
+
+        setConnectionStatus("telegram-connection-status", "Validating Telegram credentials and connecting account…", "working");
+        const submit = document.querySelector('#telegram-connect-form button[type="submit"]');
+        if (submit) { submit.disabled = true; submit.textContent = "Connecting…"; }
+
+        try {
+          const response = await authedFetch("/accounts/telegram/connect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bot_token: botToken,
+              chat_id: chatId,
+              account_name: accountName || null,
+              default_language: defaultLanguage || null,
+            }),
+          });
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(describeApiError(body, response.status));
+          }
+
+          botTokenEl.value = "";
+          chatIdEl.value = "";
+          accountNameEl.value = "";
+          languageEl.value = "";
+          setConnectionStatus(
+            "telegram-connection-status",
+            `Connected: ${body.account_name || "Telegram account"}.`,
+            "success"
+          );
+          await loadAccounts();
+          await loadYoutubeChannels();
+        } catch (err) {
+          setConnectionStatus(
+            "telegram-connection-status",
+            err.message || "Telegram connection failed.",
+            "error"
+          );
+        } finally {
+          if (submit) { submit.disabled = false; submit.textContent = "Connect Telegram"; }
+        }
       }
 
       async function loadYoutubeChannels() {
@@ -2439,13 +3367,13 @@
             stateClass = "expired";
             expiryHtml = `<span class="yt-chip-expiry expired">expired</span>`;
             reconnectHtml = `<a class="yt-chip-reconnect" href="/auth/youtube/login" target="_blank">Reconnect</a>`;
-            expiredChannels.push(a.account_name);
+            expiredChannels.push(escapeHtml(a.account_name));
           } else if (age >= WARNING_THRESHOLD_DAYS) {
             const daysLeft = Math.max(0, Math.ceil(TOKEN_EXPIRY_DAYS - age));
             stateClass = "warning";
             expiryHtml = `<span class="yt-chip-expiry warning">${daysLeft}d left</span>`;
             reconnectHtml = `<a class="yt-chip-reconnect" href="/auth/youtube/login" target="_blank">Reconnect</a>`;
-            warningChannels.push(a.account_name);
+            warningChannels.push(escapeHtml(a.account_name));
           }
 
           const langBadge = a.default_language
@@ -2767,63 +3695,49 @@
 
         list.innerHTML = sorted.map((a) => {
           const isFake = knownDemoNames.includes(a.account_name);
-          const label = `${a.platform.toUpperCase()} — ${a.account_name}${isFake ? " (demo)" : " (real)"}`;
+          const label = `${escapeHtml(String(a.platform || "").toUpperCase())} — ${escapeHtml(a.account_name)}${isFake ? " (demo)" : " (real)"}`;
           const defaultLang = a.default_language || "";
-          const defaultLangLabel = LANGUAGES.find((l) => l.code === defaultLang)?.label || defaultLang;
-          const langBadge = defaultLang
-            ? `<span class="lang-tag">default: ${defaultLang}</span>`
-            : `<span class="lang-tag" style="color:var(--dim); border-color:var(--border-soft);">no default</span>`;
-
-          const langOptionsForAccount = LANGUAGES
-            .filter((l) => l.code !== defaultLang)
-            .map((l) => `<option value="${l.code}">${l.label}</option>`)
-            .join("");
-
-          const defaultLanguageOption = defaultLang
-            ? `<option value="${defaultLang}" selected>Channel default — ${defaultLangLabel}</option>`
-            : `<option value="">No language override</option>`;
+          const langBadge = defaultLang ? `<span class="lang-tag">${defaultLang}</span>` : "";
+          const langOptionsForAccount = LANGUAGES.map(
+            (l) => `<option value="${l.code}" ${l.code === defaultLang ? "selected" : ""}>${l.label}</option>`,
+          ).join("");
 
           return `
-              <div class="target-card" data-account-id="${a.id}">
+              <div class="target-card" data-account-id="${escapeHtml(a.id)}">
                 <div class="target-card-head">
-                  <input type="checkbox" class="cf-target-check" id="check-${a.id}" data-account-id="${a.id}" onchange="onTargetCheckToggle('${a.id}')" />
-                  <label class="account-label" for="check-${a.id}">${label} ${langBadge}</label>
-                  <button type="button" class="target-only-btn" onclick="selectOnlyTarget('${a.id}')">Only this</button>
-                  <select class="cf-target-lang" data-account-id="${a.id}" onchange="onTargetLangChange('${a.id}')">
-                    ${defaultLanguageOption}
+                  <input type="checkbox" class="cf-target-check" id="check-${escapeHtml(a.id)}" data-account-id="${escapeHtml(a.id)}" onchange="onTargetCheckToggle('${escapeHtml(a.id)}')" />
+                  <label class="account-label" for="check-${escapeHtml(a.id)}">${label} ${langBadge}</label>
+                  <button type="button" class="target-only-btn" onclick="selectOnlyTarget('${escapeHtml(a.id)}')">Only this</button>
+                  <select class="cf-target-lang" data-account-id="${escapeHtml(a.id)}" onchange="onTargetLangChange('${a.id}')">
+                    <option value="">No language tag</option>
                     ${langOptionsForAccount}
-                    ${defaultLang ? '<option value="">No language override</option>' : ""}
                   </select>
                 </div>
                 <div class="target-card-body" id="target-body-${a.id}" style="display:none;">
                   <div class="field-block">
-                    <label class="field-label">${a.platform === "telegram" ? "Title — linked from the selected YouTube target (read-only)" : "Title in this language — type in Latin letters, press space to convert (optional, falls back to default title)"}</label>
-                    <textarea class="cf-target-title${a.platform === "telegram" ? " telegram-linked-field" : ""}" data-account-id="${a.id}" rows="2" ${a.platform === "telegram" ? 'readonly aria-readonly="true" tabindex="-1" placeholder="Select a YouTube target to populate this title"' : ""}></textarea>
+                    <label class="field-label">${a.platform === "telegram" ? "Title — taken automatically from the selected YouTube target" : "Title in this language — type in Latin letters, press space to convert (optional, falls back to default title)"}</label>
+                    <textarea class="cf-target-title" data-account-id="${escapeHtml(a.id)}" rows="2" ${a.platform === "telegram" ? 'readonly aria-readonly="true"' : ""}></textarea>
                     <div class="char-counter" id="target-title-counter-${a.id}"></div>
                   </div>
                   <div class="field-block">
-                    <label class="field-label">${a.platform === "telegram" ? "Caption — linked from the selected YouTube target (read-only)" : "Caption in this language — type in Latin letters, press space to convert (optional, falls back to default caption)"}</label>
-                    <textarea class="cf-target-caption${a.platform === "telegram" ? " telegram-linked-field" : ""}" data-account-id="${a.id}" rows="3" ${a.platform === "telegram" ? 'readonly aria-readonly="true" tabindex="-1" placeholder="Select a YouTube target to populate this caption"' : ""}></textarea>
+                    <label class="field-label">${a.platform === "telegram" ? "Caption — taken automatically from the selected YouTube target" : "Caption in this language — type in Latin letters, press space to convert (optional, falls back to default caption)"}</label>
+                    <textarea class="cf-target-caption" data-account-id="${escapeHtml(a.id)}" rows="3" ${a.platform === "telegram" ? 'readonly aria-readonly="true"' : ""}></textarea>
                     <div class="char-counter" id="target-caption-counter-${a.id}"></div>
                   </div>
                   <div class="language-review-note" id="language-review-note-${a.id}">Language changed — review this channel's title and caption before publishing.</div>
-                  ${a.platform === "telegram" ? `
-                  <div class="telegram-content-note" id="telegram-content-note-${a.id}">
-                    Telegram content is linked to the selected YouTube target. Edit the YouTube title/caption to change what Telegram receives. Telegram language can be overridden independently.
-                  </div>` : ""}
                    ${a.platform === "youtube" ? `
                    <div class="field-block">
                      <label class="field-label">YouTube tags for this channel (optional — comma separated; falls back to the default YouTube tags)</label>
-                     <textarea class="cf-target-tags" data-account-id="${a.id}" rows="2" placeholder="e.g. news, india, breaking"></textarea>
+                     <textarea class="cf-target-tags" data-account-id="${escapeHtml(a.id)}" rows="2" placeholder="e.g. news, india, breaking"></textarea>
                    </div>
                    <div class="yt-settings-grid">
                      <div class="yt-setting-field">
                        <label class="field-label">Privacy for this channel</label>
-                       <select class="cf-target-youtube-privacy" data-account-id="${a.id}">${renderYoutubePrivacyOptions("", true)}</select>
+                       <select class="cf-target-youtube-privacy" data-account-id="${escapeHtml(a.id)}">${renderYoutubePrivacyOptions("", true)}</select>
                      </div>
                      <div class="yt-setting-field">
                        <label class="field-label">Category for this channel</label>
-                       <select class="cf-target-youtube-category" data-account-id="${a.id}">${renderYoutubeCategoryOptions("", true)}</select>
+                       <select class="cf-target-youtube-category" data-account-id="${escapeHtml(a.id)}">${renderYoutubeCategoryOptions("", true)}</select>
                      </div>
                    </div>` : ""}
                    ${a.platform === "telegram" ? `
@@ -2868,27 +3782,16 @@
         }).join("");
 
         sorted.forEach((a) => {
-          const languageSelect = document.querySelector(`.cf-target-lang[data-account-id="${a.id}"]`);
-
-          if (languageSelect) {
-            onTargetLangChange(a.id);
-            TARGET_LANGUAGE_STATE[a.id] = languageSelect.value || "";
-          } else {
-            TARGET_LANGUAGE_STATE[a.id] = "";
-          }
-
+          if (a.default_language) onTargetLangChange(a.id);
+          TARGET_LANGUAGE_STATE[a.id] = document.querySelector(`.cf-target-lang[data-account-id="${escapeHtml(a.id)}"]`)?.value || "";
           if (a.platform !== "telegram") initTargetDropzone(a.id);
           if (a.platform === "youtube") initTargetThumbnailDropzone(a.id);
-          const titleField = document.querySelector(`.cf-target-title[data-account-id="${a.id}"]`);
-          const captionField = document.querySelector(`.cf-target-caption[data-account-id="${a.id}"]`);
+          const titleField = document.querySelector(`.cf-target-title[data-account-id="${escapeHtml(a.id)}"]`);
+          const captionField = document.querySelector(`.cf-target-caption[data-account-id="${escapeHtml(a.id)}"]`);
           attachCharCounter(titleField, document.getElementById(`target-title-counter-${a.id}`), CHAR_LIMITS.youtube_title);
           attachCharCounter(captionField, document.getElementById(`target-caption-counter-${a.id}`), a.platform === "telegram" ? CHAR_LIMITS.telegram_caption : CHAR_LIMITS.youtube_caption);
           [titleField, captionField].forEach((field) => field?.addEventListener("input", () => markTargetLanguageReviewed(a.id)));
-          // Preserve the initial/default language so a later manual
-          // language change is detected and requires a review.
-          TARGET_LANGUAGE_STATE[a.id] = document.querySelector(
-            `.cf-target-lang[data-account-id="${a.id}"]`
-          )?.value || "";
+          TARGET_LANGUAGE_STATE[a.id] = undefined;
           updateTargetMediaUploadControls(a.id);
           if (a.platform === "youtube") updateTargetThumbnailUploadControls(a.id);
         });
@@ -2949,12 +3852,10 @@
 
           titleField.value = source.title;
           captionField.value = source.caption;
+          if (source.language) langField.value = source.language;
           titleField.dispatchEvent(new Event("input", { bubbles: true }));
           captionField.dispatchEvent(new Event("input", { bubbles: true }));
-
-          if (note) {
-            note.textContent = `Linked to YouTube: ${source.account.account_name}. Telegram will post the YouTube video link after YouTube publishes.`;
-          }
+          if (note) note.textContent = `Linked to YouTube: ${source.account.account_name}. Telegram will post the YouTube video link after YouTube publishes.`;
         });
       }
 
@@ -2999,15 +3900,8 @@
           syncTelegramTargetsFromYouTube();
         }
 
-        const isTelegram = account && String(account.platform).toLowerCase() === "telegram";
-
-        if (isTelegram) {
-          if (titleLabel) titleLabel.textContent = "Title — linked from the selected YouTube target (read-only)";
-          if (captionLabel) captionLabel.textContent = "Caption — linked from the selected YouTube target (read-only)";
-        } else {
-          if (titleLabel) titleLabel.textContent = `Title for ${langLabel} — type in Latin letters, press space to convert (optional, falls back to default title)`;
-          if (captionLabel) captionLabel.textContent = `Caption for ${langLabel} — type in Latin letters, press space to convert (optional, falls back to default caption)`;
-        }
+        if (titleLabel) titleLabel.textContent = `Title for ${langLabel} — type in Latin letters, press space to convert (optional, falls back to default title)`;
+        if (captionLabel) captionLabel.textContent = `Caption for ${langLabel} — type in Latin letters, press space to convert (optional, falls back to default caption)`;
 
         const changedAfterInitialLoad = previousLang !== undefined && previousLang !== lang;
         const hasExistingText = !!(titleField.value.trim() || captionField.value.trim());
@@ -3314,39 +4208,221 @@
       });
 
       async function createRealPost() {
+        if (CREATE_SUBMIT_IN_FLIGHT) return;
+
         syncTelegramTargetsFromYouTube();
-        const title = document.getElementById("cf-title").value || "Untitled"; const caption = document.getElementById("cf-caption").value || ""; const defaultTags = parseTags(document.getElementById("cf-tags").value || ""); const defaultPrivacy = document.getElementById("cf-youtube-privacy").value || YT_UPLOAD_DEFAULTS.privacyStatus; const defaultCategory = document.getElementById("cf-youtube-category").value || YT_UPLOAD_DEFAULTS.categoryId;
-        const checks = Array.from(document.querySelectorAll(".cf-target-check:checked")); if (checks.length === 0) { showToast("Select at least one target account.", "warning"); return; }
-        if (!hasUsableMediaForPublish()) { showToast("Each selected channel needs media. Telegram uses the selected YouTube target and does not upload a separate video.", "warning"); return; }
+        const title = document.getElementById("cf-title").value || "Untitled";
+        const caption = document.getElementById("cf-caption").value || "";
+        const defaultTags = parseTags(document.getElementById("cf-tags").value || "");
+        const defaultPrivacy = document.getElementById("cf-youtube-privacy").value || YT_UPLOAD_DEFAULTS.privacyStatus;
+        const defaultCategory = document.getElementById("cf-youtube-category").value || YT_UPLOAD_DEFAULTS.categoryId;
+        const checks = Array.from(document.querySelectorAll(".cf-target-check:checked"));
+
+        if (checks.length === 0) {
+          showToast("Select at least one target account.", "warning");
+          return;
+        }
+        if (!hasUsableMediaForPublish()) {
+          showToast("Each selected channel needs media. Telegram uses the selected YouTube target and does not upload a separate video.", "warning");
+          return;
+        }
         const reviewTarget = hasUnreviewedLanguageChanges();
-        if (reviewTarget) { showToast("Please review the title and caption after changing a channel's language before publishing.", "warning"); return; }
-        const timingMode = document.querySelector('input[name="cf-timing"]:checked').value; let scheduledFor = new Date().toISOString();
-        if (timingMode === "later") { scheduledFor = getScheduledIsoString(); if (new Date(scheduledFor) <= new Date()) { showToast("Scheduled time must be in the future.", "warning"); return; } }
-        const targets = checks.map((cb) => {
-          const accountId = cb.dataset.accountId; const account = ALL_ACCOUNTS_CACHE.find((a) => String(a.id) === String(accountId)); const isTelegram = account && String(account.platform).toLowerCase() === "telegram"; const linkedYoutube = isTelegram ? getLinkedYouTubeSource() : null; const lang = document.querySelector(`.cf-target-lang[data-account-id="${accountId}"]`).value; const titleOverride = isTelegram && linkedYoutube ? linkedYoutube.title : document.querySelector(`.cf-target-title[data-account-id="${accountId}"]`).value; const captionOverride = isTelegram && linkedYoutube ? linkedYoutube.caption : document.querySelector(`.cf-target-caption[data-account-id="${accountId}"]`).value; const mediaOverride = isTelegram ? null : (TARGET_MEDIA_OVERRIDES[accountId] || null); const thumbnailOverride = isTelegram ? null : (TARGET_THUMBNAIL_OVERRIDES[accountId] || null); const tagsField = document.querySelector(`.cf-target-tags[data-account-id="${accountId}"]`); const tagsValue = tagsField ? tagsField.value : ""; const privacyField = document.querySelector(`.cf-target-youtube-privacy[data-account-id="${accountId}"]`); const categoryField = document.querySelector(`.cf-target-youtube-category[data-account-id="${accountId}"]`); const privacyValue = privacyField ? privacyField.value : ""; const categoryValue = categoryField ? categoryField.value : "";
-          return { account_id: accountId, language: (isTelegram && linkedYoutube ? (linkedYoutube.language || lang) : lang) || null, title_override: titleOverride || null, caption_override: captionOverride || null, youtube_tags: account && account.platform === "youtube" && tagsValue.trim() ? parseTags(tagsValue) : null, media_s3_key_override: mediaOverride, thumbnail_s3_key_override: thumbnailOverride, youtube_privacy_status_override: account && account.platform === "youtube" ? (privacyValue || null) : null, youtube_category_id_override: account && account.platform === "youtube" ? (categoryValue || null) : null };
-        });
-        const createRes = await authedFetch("/posts/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, caption, media_s3_key: UPLOADED_MEDIA_KEY, media_type: "video", thumbnail_s3_key: UPLOADED_THUMBNAIL_KEY, youtube_tags: defaultTags, youtube_privacy_status: defaultPrivacy, youtube_category_id: defaultCategory, created_by: "dashboard", targets, scheduled_for: scheduledFor }) });
-        if (!createRes.ok) { const err = await createRes.json().catch(() => ({})); showToast("Could not create post: " + describeApiError(err, createRes.status), "error"); return; }
-        const post = await createRes.json();
-        if (timingMode === "now") { const hasPublishableTarget = post.targets.some((t) => t.status !== "failed"); if (hasPublishableTarget) await authedFetch(`/posts/${post.id}/publish-all`, { method: "POST" }); }
-        showToast(timingMode === "now" ? "Post created and publishing started." : "Post scheduled successfully.", "success");
-        if (UPLOADED_MEDIA_PREVIEW_URL) URL.revokeObjectURL(UPLOADED_MEDIA_PREVIEW_URL); if (UPLOADED_THUMBNAIL_PREVIEW_URL) URL.revokeObjectURL(UPLOADED_THUMBNAIL_PREVIEW_URL); Object.values(TARGET_MEDIA_PREVIEW_URLS).forEach((url) => URL.revokeObjectURL(url)); Object.values(TARGET_THUMBNAIL_PREVIEW_URLS).forEach((url) => URL.revokeObjectURL(url));
-        UPLOADED_MEDIA_KEY = null; UPLOADED_MEDIA_PREVIEW_URL = null; TARGET_MEDIA_OVERRIDES = {}; TARGET_MEDIA_PREVIEW_URLS = {}; UPLOADED_THUMBNAIL_KEY = null; UPLOADED_THUMBNAIL_PREVIEW_URL = null; TARGET_THUMBNAIL_OVERRIDES = {}; TARGET_THUMBNAIL_PREVIEW_URLS = {};
-        MEDIA_UPLOAD_HISTORY = []; THUMBNAIL_UPLOAD_HISTORY = []; TARGET_MEDIA_UPLOAD_HISTORY = {}; TARGET_THUMBNAIL_UPLOAD_HISTORY = {}; TARGET_LANGUAGE_STATE = {}; updateMainMediaUploadControls(); updateMainThumbnailUploadControls();
-        document.getElementById("cf-dropzone-text").textContent = "Drag a video file here, or click to browse"; document.getElementById("cf-dropzone").classList.remove("has-file"); const mainVideoPreview = document.getElementById("cf-video-preview"); if (mainVideoPreview) { mainVideoPreview.pause(); mainVideoPreview.removeAttribute("src"); mainVideoPreview.load(); mainVideoPreview.classList.remove("visible"); } document.getElementById("cf-thumbnail-dropzone-text").textContent = "Drag a JPG/PNG thumbnail here, or click to browse"; document.getElementById("cf-thumbnail-dropzone").classList.remove("has-file"); const thumbPreview = document.getElementById("cf-thumbnail-preview"); thumbPreview.removeAttribute("src"); thumbPreview.classList.remove("visible"); document.getElementById("cf-title").value = ""; document.getElementById("cf-caption").value = ""; document.getElementById("cf-tags").value = ""; document.getElementById("cf-youtube-privacy").value = YT_UPLOAD_DEFAULTS.privacyStatus; document.getElementById("cf-youtube-category").value = YT_UPLOAD_DEFAULTS.categoryId; document.querySelectorAll(".cf-target-youtube-privacy").forEach((el) => { el.value = ""; }); document.querySelectorAll(".cf-target-youtube-category").forEach((el) => { el.value = ""; }); document.getElementById("cf-title").dispatchEvent(new Event("input")); document.getElementById("cf-caption").dispatchEvent(new Event("input")); document.getElementById("cf-tags").dispatchEvent(new Event("input")); initAutoGrowTextareas(); LAST_POSTS_SNAPSHOT = null; fetchPosts();
+        if (reviewTarget) {
+          showToast("Please review the title and caption after changing a channel's language before publishing.", "warning");
+          return;
+        }
+
+        const timingMode = document.querySelector('input[name="cf-timing"]:checked').value;
+        let scheduledFor = new Date().toISOString();
+        if (timingMode === "later") {
+          scheduledFor = getScheduledIsoString();
+          if (new Date(scheduledFor) <= new Date()) {
+            showToast("Scheduled time must be in the future.", "warning");
+            return;
+          }
+        }
+
+        const submitButton = document.getElementById("create-publish-btn");
+        CREATE_SUBMIT_IN_FLIGHT = true;
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = timingMode === "now" ? "Publishing…" : "Scheduling…";
+        }
+
+        try {
+          const targets = checks.map((cb) => {
+            const accountId = cb.dataset.accountId;
+            const account = ALL_ACCOUNTS_CACHE.find((a) => String(a.id) === String(accountId));
+            const isTelegram = account && String(account.platform).toLowerCase() === "telegram";
+            const linkedYoutube = isTelegram ? getLinkedYouTubeSource() : null;
+            const langField = document.querySelector(`.cf-target-lang[data-account-id="${accountId}"]`);
+            const titleField = document.querySelector(`.cf-target-title[data-account-id="${accountId}"]`);
+            const captionField = document.querySelector(`.cf-target-caption[data-account-id="${accountId}"]`);
+            const titleOverride = isTelegram && linkedYoutube ? linkedYoutube.title : titleField?.value || "";
+            const captionOverride = isTelegram && linkedYoutube ? linkedYoutube.caption : captionField?.value || "";
+            const mediaOverride = isTelegram ? null : (TARGET_MEDIA_OVERRIDES[accountId] || null);
+            const thumbnailOverride = isTelegram ? null : (TARGET_THUMBNAIL_OVERRIDES[accountId] || null);
+            const tagsField = document.querySelector(`.cf-target-tags[data-account-id="${accountId}"]`);
+            const tagsValue = tagsField ? tagsField.value : "";
+            const privacyField = document.querySelector(`.cf-target-youtube-privacy[data-account-id="${accountId}"]`);
+            const categoryField = document.querySelector(`.cf-target-youtube-category[data-account-id="${accountId}"]`);
+            const privacyValue = privacyField ? privacyField.value : "";
+            const categoryValue = categoryField ? categoryField.value : "";
+
+            return {
+              account_id: accountId,
+              language: (isTelegram && linkedYoutube ? (linkedYoutube.language || langField?.value) : langField?.value) || null,
+              title_override: titleOverride || null,
+              caption_override: captionOverride || null,
+              youtube_tags: account && String(account.platform).toLowerCase() === "youtube" && tagsValue.trim() ? parseTags(tagsValue) : null,
+              media_s3_key_override: mediaOverride,
+              thumbnail_s3_key_override: thumbnailOverride,
+              youtube_privacy_status_override: account && String(account.platform).toLowerCase() === "youtube" ? (privacyValue || null) : null,
+              youtube_category_id_override: account && String(account.platform).toLowerCase() === "youtube" ? (categoryValue || null) : null,
+            };
+          });
+
+          const createRes = await authedFetch("/posts/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title,
+              caption,
+              media_s3_key: UPLOADED_MEDIA_KEY,
+              media_type: "video",
+              thumbnail_s3_key: UPLOADED_THUMBNAIL_KEY,
+              youtube_tags: defaultTags,
+              youtube_privacy_status: defaultPrivacy,
+              youtube_category_id: defaultCategory,
+              created_by: "dashboard",
+              targets,
+              scheduled_for: scheduledFor,
+            }),
+          });
+
+          if (!createRes.ok) {
+            const err = await createRes.json().catch(() => ({}));
+            showToast("Could not create post: " + describeApiError(err, createRes.status), "error");
+            return;
+          }
+
+          const post = await createRes.json();
+
+          if (timingMode === "now") {
+            const hasPublishableTarget = post.targets.some((t) => t.status !== "failed");
+            if (hasPublishableTarget) {
+              const started = await publishAll(post.id, { silent: true });
+              if (!started) {
+                showToast("Post was created, but publishing could not be started. Check the rundown and retry.", "error");
+              } else {
+                showToast("Post created and publishing started.", "success");
+              }
+            } else {
+              showToast("Post was created, but every selected target is currently invalid or failed validation.", "warning");
+            }
+          } else {
+            showToast("Post scheduled successfully.", "success");
+          }
+
+          if (UPLOADED_MEDIA_PREVIEW_URL) URL.revokeObjectURL(UPLOADED_MEDIA_PREVIEW_URL);
+          if (UPLOADED_THUMBNAIL_PREVIEW_URL) URL.revokeObjectURL(UPLOADED_THUMBNAIL_PREVIEW_URL);
+          Object.values(TARGET_MEDIA_PREVIEW_URLS).forEach((url) => URL.revokeObjectURL(url));
+          Object.values(TARGET_THUMBNAIL_PREVIEW_URLS).forEach((url) => URL.revokeObjectURL(url));
+
+          UPLOADED_MEDIA_KEY = null;
+          UPLOADED_MEDIA_PREVIEW_URL = null;
+          TARGET_MEDIA_OVERRIDES = {};
+          TARGET_MEDIA_PREVIEW_URLS = {};
+          UPLOADED_THUMBNAIL_KEY = null;
+          UPLOADED_THUMBNAIL_PREVIEW_URL = null;
+          TARGET_THUMBNAIL_OVERRIDES = {};
+          TARGET_THUMBNAIL_PREVIEW_URLS = {};
+          MEDIA_UPLOAD_HISTORY = [];
+          THUMBNAIL_UPLOAD_HISTORY = [];
+          TARGET_MEDIA_UPLOAD_HISTORY = {};
+          TARGET_THUMBNAIL_UPLOAD_HISTORY = {};
+          TARGET_LANGUAGE_STATE = {};
+
+          updateMainMediaUploadControls();
+          updateMainThumbnailUploadControls();
+          document.getElementById("cf-dropzone-text").textContent = "Drag a video file here, or click to browse";
+          document.getElementById("cf-dropzone").classList.remove("has-file");
+          const mainVideoPreview = document.getElementById("cf-video-preview");
+          if (mainVideoPreview) {
+            mainVideoPreview.pause();
+            mainVideoPreview.removeAttribute("src");
+            mainVideoPreview.load();
+            mainVideoPreview.classList.remove("visible");
+          }
+          document.getElementById("cf-thumbnail-dropzone-text").textContent = "Drag a JPG/PNG thumbnail here, or click to browse";
+          document.getElementById("cf-thumbnail-dropzone").classList.remove("has-file");
+          const thumbPreview = document.getElementById("cf-thumbnail-preview");
+          thumbPreview.removeAttribute("src");
+          thumbPreview.classList.remove("visible");
+          document.getElementById("cf-title").value = "";
+          document.getElementById("cf-caption").value = "";
+          document.getElementById("cf-tags").value = "";
+          document.getElementById("cf-youtube-privacy").value = YT_UPLOAD_DEFAULTS.privacyStatus;
+          document.getElementById("cf-youtube-category").value = YT_UPLOAD_DEFAULTS.categoryId;
+          document.querySelectorAll(".cf-target-youtube-privacy").forEach((el) => { el.value = ""; });
+          document.querySelectorAll(".cf-target-youtube-category").forEach((el) => { el.value = ""; });
+          document.querySelectorAll(".cf-target-check").forEach((el) => {
+            el.checked = false;
+            const accountId = el.dataset.accountId;
+            document.getElementById(`target-body-${accountId}`)?.style.setProperty("display", "none");
+            document.querySelector(`.target-card[data-account-id="${accountId}"]`)?.classList.remove("expanded");
+          });
+          document.getElementById("cf-title").dispatchEvent(new Event("input"));
+          document.getElementById("cf-caption").dispatchEvent(new Event("input"));
+          document.getElementById("cf-tags").dispatchEvent(new Event("input"));
+          initAutoGrowTextareas();
+          LAST_POSTS_SNAPSHOT = null;
+          await fetchPosts();
+        } catch (err) {
+          showToast("Could not create post: " + (err.message || "Network error."), "error");
+        } finally {
+          CREATE_SUBMIT_IN_FLIGHT = false;
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = "Create + publish now";
+          }
+        }
       }
 
       async function publishReal(targetId) {
-        await authedFetch(`/posts/targets/${targetId}/publish-now`, { method: "POST" });
-        LAST_POSTS_SNAPSHOT = null;
-        fetchPosts();
+        try {
+          const res = await authedFetch(`/posts/targets/${targetId}/publish-now`, { method: "POST" });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            showToast("Could not publish target: " + describeApiError(err, res.status), "error");
+            return false;
+          }
+          LAST_POSTS_SNAPSHOT = null;
+          await fetchPosts();
+          showToast("Publish request accepted.", "success");
+          return true;
+        } catch (err) {
+          showToast("Could not publish target: " + (err.message || "Network error."), "error");
+          return false;
+        }
       }
 
-      async function publishAll(postId) {
-        await authedFetch(`/posts/${postId}/publish-all`, { method: "POST" });
-        LAST_POSTS_SNAPSHOT = null;
-        fetchPosts();
+      async function publishAll(postId, { silent = false } = {}) {
+        try {
+          const res = await authedFetch(`/posts/${postId}/publish-all`, { method: "POST" });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            if (!silent) showToast("Could not start publishing: " + describeApiError(err, res.status), "error");
+            return false;
+          }
+          LAST_POSTS_SNAPSHOT = null;
+          await fetchPosts();
+          if (!silent) showToast("Publishing request accepted.", "success");
+          return true;
+        } catch (err) {
+          if (!silent) showToast("Could not start publishing: " + (err.message || "Network error."), "error");
+          return false;
+        }
       }
 
       async function callDemo(action) {
@@ -3414,49 +4490,73 @@
         document.getElementById("kpi-failed").textContent = failed;
       }
 
-      async function fetchPosts() {
-        const url = CURRENT_LANGUAGE_FILTER ? `/posts/?language=${encodeURIComponent(CURRENT_LANGUAGE_FILTER)}` : "/posts/";
-        const res = await authedFetch(url);
-        if (!res.ok) return;
-        const posts = await res.json();
+      function setRundownStatus(message = "", state = "") {
+        const el = document.getElementById("rundown-status");
+        if (!el) return;
+        el.textContent = message;
+        el.className = `rundown-status${state ? ` ${state}` : ""}`;
+      }
 
-        updateKpiStrip(posts);
-
-        const snapshot = JSON.stringify(posts);
-        if (snapshot === LAST_POSTS_SNAPSHOT) return;
-        LAST_POSTS_SNAPSHOT = snapshot;
-
-        const container = document.getElementById("posts");
-        if (posts.length === 0) {
-          container.innerHTML = '<div class="empty">No segments in today\'s rundown yet.</div>';
-          return;
+      function stopPostPolling() {
+        if (POSTS_POLL_TIMER) {
+          clearInterval(POSTS_POLL_TIMER);
+          POSTS_POLL_TIMER = null;
         }
+      }
 
-        container.innerHTML = posts.map((post, i) => {
-          const isDemo = post.created_by === "demo-seed";
-          const publishedCount = post.targets.filter((t) => t.status === "published").length;
-          const pendingCount = post.targets.filter((t) => t.status === "pending" || t.status === "publishing").length;
-          const failedCount = post.targets.filter((t) => t.status === "failed").length;
+      function startPostPolling() {
+        stopPostPolling();
+        POSTS_POLL_TIMER = setInterval(() => {
+          if (AUTHENTICATED && document.visibilityState === "visible") fetchPosts();
+        }, 5000);
+      }
 
-          const scheduledFor = post.targets[0]?.scheduled_for;
-          const isFutureScheduled =
-            scheduledFor &&
-            new Date(scheduledFor) > new Date() &&
-            post.targets.every((t) => t.status === "pending");
+      async function fetchPosts() {
+        if (!AUTHENTICATED || POSTS_FETCH_IN_FLIGHT) return;
+        POSTS_FETCH_IN_FLIGHT = true;
+        const url = CURRENT_LANGUAGE_FILTER ? `/posts/?language=${encodeURIComponent(CURRENT_LANGUAGE_FILTER)}` : "/posts/";
 
-          const scheduledBadge = isFutureScheduled
-            ? `<span class="scheduled-badge">Scheduled: ${new Date(scheduledFor).toLocaleString()}</span>`
-            : "";
+        try {
+          const res = await authedFetch(url);
+          if (!res.ok) {
+            if (res.status === 401) {
+              stopPostPolling();
+              CURRENT_USER = null;
+              showLoginScreen("Your session has expired. Please sign in again.");
+              return;
+            }
+            const err = await res.json().catch(() => ({}));
+            setRundownStatus(`Rundown unavailable: ${describeApiError(err, res.status)}`, "error");
+            return;
+          }
 
-          const publishAction =
-            !isDemo && pendingCount > 1 && !isFutureScheduled
-              ? `<button class="publish-all-btn" onclick="publishAll('${post.id}')">Publish all ${pendingCount} now</button>`
-              : "";
+          const posts = await res.json();
+          setRundownStatus("");
+          updateKpiStrip(posts);
 
-          return `
+          const snapshot = JSON.stringify(posts);
+          if (snapshot === LAST_POSTS_SNAPSHOT) return;
+          LAST_POSTS_SNAPSHOT = snapshot;
+
+          const container = document.getElementById("posts");
+          if (posts.length === 0) {
+            container.innerHTML = '<div class="empty">No segments in today\'s rundown yet.</div>';
+            return;
+          }
+
+          container.innerHTML = posts.map((post, i) => {
+            const isDemo = post.created_by === "demo-seed";
+            const publishedCount = post.targets.filter((t) => t.status === "published").length;
+            const pendingCount = post.targets.filter((t) => t.status === "pending" || t.status === "publishing").length;
+            const failedCount = post.targets.filter((t) => t.status === "failed").length;
+            const scheduledFor = post.targets[0]?.scheduled_for;
+            const isFutureScheduled = scheduledFor && new Date(scheduledFor) > new Date() && post.targets.every((t) => t.status === "pending");
+            const scheduledBadge = isFutureScheduled ? `<span class="scheduled-badge">Scheduled: ${escapeHtml(new Date(scheduledFor).toLocaleString())}</span>` : "";
+            const publishAction = !isDemo && pendingCount > 1 && !isFutureScheduled ? `<button class="publish-all-btn" onclick="publishAll('${escapeHtml(post.id)}')">Publish all ${pendingCount} now</button>` : "";
+
+            return `
         <div class="post-card" style="animation-delay:${Math.min(i * 40, 320)}ms">
           <div class="seg-number">${segNumber(i)}</div>
-
           <div class="post-body">
             <div class="post-title-row">
               <div class="post-title">
@@ -3464,10 +4564,9 @@
                 <span class="badge ${isDemo ? "demo" : "real"}">${isDemo ? "Demo" : "Real"}</span>
                 ${scheduledBadge}
               </div>
-
               <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 ${publishAction}
-                <button class="secondary delete-btn" onclick="deletePost('${post.id}')" title="Delete this post">Delete</button>
+                <button class="secondary delete-btn" onclick="deletePost('${escapeHtml(post.id)}')" title="Delete this post">Delete</button>
               </div>
             </div>
 
@@ -3477,7 +4576,6 @@
                   ${highlightHashtags(escapeHtml(post.caption || "")) || '<span style="color:var(--dim)">(no default caption)</span>'}
                 </div>
               </div>
-
               <div class="post-summary-stats">
                 <span class="post-stat"><strong>${post.targets.length}</strong> targets</span>
                 <span class="post-stat published"><strong>${publishedCount}</strong> published</span>
@@ -3488,163 +4586,60 @@
 
             <div class="targets">
               ${post.targets.map((t) => {
-                const isYoutube = t.platform === "youtube";
-                const platformName = (t.platform || "?").toUpperCase();
-                const accountName = t.account_name || t.social_account?.account_name || platformName;
+                const isYoutube = String(t.platform || "").toLowerCase() === "youtube";
+                const platformName = escapeHtml((t.platform || "?").toUpperCase());
+                const accountName = escapeHtml(t.account_name || t.social_account?.account_name || platformName);
                 const title = t.title_override || post.title || "(untitled)";
                 const caption = t.caption_override || post.caption || "";
                 const language = t.language || "Default";
-                const tags = isYoutube
-                  ? (Array.isArray(t.youtube_tags) && t.youtube_tags.length
-                    ? t.youtube_tags
-                    : (Array.isArray(post.youtube_tags) ? post.youtube_tags : []))
-                  : [];
-
+                const tags = isYoutube ? (Array.isArray(t.youtube_tags) && t.youtube_tags.length ? t.youtube_tags : (Array.isArray(post.youtube_tags) ? post.youtube_tags : [])) : [];
                 const targetMedia = t.media_s3_key_override || post.media_s3_key || null;
                 const targetThumbnail = t.thumbnail_s3_key_override || post.thumbnail_s3_key || null;
-
-                const mediaName = targetMedia
-                  ? String(targetMedia).split("/").pop()
-                  : "No media attached";
-
-                const thumbnailLabel = t.thumbnail_s3_key_override
-                  ? "Custom thumbnail"
-                  : (post.thumbnail_s3_key ? "Default thumbnail" : "No thumbnail");
-
-                const targetTags = tags.length
-                  ? `<div class="target-tags">${tags.slice(0, 8).map((tag) => `<span class="target-tag">${escapeHtml(tag)}</span>`).join("")}${tags.length > 8 ? `<span class="target-tag">+${tags.length - 8} more</span>` : ""}</div>`
-                  : `<span class="target-muted">No native YouTube tags</span>`;
-
-                const publishedAt = t.published_at
-                  ? new Date(t.published_at).toLocaleString()
-                  : "—";
-
+                const mediaName = targetMedia ? String(targetMedia).split("/").pop() : "No media attached";
+                const thumbnailLabel = t.thumbnail_s3_key_override ? "Custom thumbnail" : (post.thumbnail_s3_key ? "Default thumbnail" : "No thumbnail");
+                const targetTags = tags.length ? `<div class="target-tags">${tags.slice(0, 8).map((tag) => `<span class="target-tag">${escapeHtml(tag)}</span>`).join("")}${tags.length > 8 ? `<span class="target-tag">+${tags.length - 8} more</span>` : ""}</div>` : `<span class="target-muted">No native YouTube tags</span>`;
+                const publishedAt = t.published_at ? new Date(t.published_at).toLocaleString() : "—";
                 const targetIdLabel = t.platform_post_id || "Not available yet";
-
-                const publishBtn =
-                  !isDemo && t.status === "pending" && !isFutureScheduled
-                    ? `<button onclick="publishReal('${t.id}')">Publish now</button>`
-                    : "";
-
-                const retryBtn =
-                  !isDemo && t.status === "failed"
-                    ? `<button class="retry-btn" onclick="retryPublish('${t.id}')">Retry</button>`
-                    : "";
-
-                const errorLine = t.error_message
-                  ? `<div class="target-detail target-detail-wide">
-                       <div class="target-detail-label">Error</div>
-                       <div class="target-detail-value" style="color:var(--tv9-amber);">${escapeHtml(t.error_message)}</div>
-                     </div>`
-                  : "";
-
-                const ytOpenButton =
-                  isYoutube && t.platform_post_id
-                    ? `<a href="https://www.youtube.com/watch?v=${encodeURIComponent(t.platform_post_id)}" target="_blank" rel="noopener noreferrer">Open YouTube</a>`
-                    : "";
-
-                const copyIdButton =
-                  t.platform_post_id
-                    ? `<button onclick="copyPlatformPostId('${escapeHtml(String(t.platform_post_id))}')">Copy ID</button>`
-                    : "";
-
-                const progressBar =
-                  isYoutube && t.status === "publishing"
-                    ? `<div class="yt-progress-track"><div class="yt-progress-fill"></div></div>`
-                    : "";
-
-                const ytEmbed =
-                  isYoutube && t.status === "published" && t.platform_post_id
-                    ? `<div class="yt-embed-wrap">
-                         <iframe
-                           src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(t.platform_post_id)}"
-                           title="YouTube video player"
-                           frameborder="0"
-                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                           allowfullscreen
-                           loading="lazy"></iframe>
-                       </div>`
-                    : "";
+                const publishBtn = !isDemo && t.status === "pending" && !isFutureScheduled ? `<button onclick="publishReal('${escapeHtml(t.id)}')">Publish now</button>` : "";
+                const retryBtn = !isDemo && t.status === "failed" ? `<button class="retry-btn" onclick="retryPublish('${escapeHtml(t.id)}')">Retry</button>` : "";
+                const errorLine = t.error_message ? `<div class="target-detail target-detail-wide"><div class="target-detail-label">Error</div><div class="target-detail-value" style="color:var(--tv9-amber);">${escapeHtml(t.error_message)}</div></div>` : "";
+                const ytOpenButton = isYoutube && t.platform_post_id ? `<a href="https://www.youtube.com/watch?v=${encodeURIComponent(t.platform_post_id)}" target="_blank" rel="noopener noreferrer">Open YouTube</a>` : "";
+                const copyIdButton = t.platform_post_id ? `<button onclick="copyPlatformPostId('${escapeHtml(String(t.platform_post_id))}')">Copy ID</button>` : "";
+                const progressBar = isYoutube && t.status === "publishing" ? `<div class="yt-progress-track"><div class="yt-progress-fill"></div></div>` : "";
+                const ytEmbed = isYoutube && t.status === "published" && t.platform_post_id ? `<div class="yt-embed-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(t.platform_post_id)}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>` : "";
 
                 return `
                 <div class="target ${isYoutube ? "yt-target" : ""}">
                   <div class="target-main">
-                    <span class="dot ${t.status}"></span>
+                    <span class="dot ${escapeHtml(t.status || "unknown")}"></span>
                     <strong>${platformName}</strong>
-                    <span class="target-account" title="${escapeHtml(accountName)}">${escapeHtml(accountName)}</span>
+                    <span class="target-account" title="${accountName}">${accountName}</span>
                     ${t.language ? `<span class="lang-tag">${escapeHtml(t.language)}</span>` : ""}
                     <span class="target-status">${escapeHtml(t.status || "unknown")}</span>
                     ${publishBtn}${retryBtn}
                   </div>
-
                   ${progressBar}
-
                   <div class="target-detail-grid">
                     <div class="target-detail target-detail-wide">
                       <div class="target-detail-label">Title</div>
                       <div class="target-content-title">${escapeHtml(title)}</div>
                     </div>
-
                     <div class="target-detail target-detail-wide">
                       <div class="target-detail-label">${isYoutube ? "Description / caption" : "Message"}</div>
                       <div class="target-content-caption">${escapeHtml(caption) || '<span class="target-muted">(empty)</span>'}</div>
                     </div>
-
-                    <div class="target-detail">
-                      <div class="target-detail-label">Language</div>
-                      <div class="target-detail-value"><strong>${escapeHtml(language)}</strong></div>
-                    </div>
-
-                    <div class="target-detail">
-                      <div class="target-detail-label">Published</div>
-                      <div class="target-detail-value">${escapeHtml(publishedAt)}</div>
-                    </div>
-
+                    <div class="target-detail"><div class="target-detail-label">Language</div><div class="target-detail-value"><strong>${escapeHtml(language)}</strong></div></div>
+                    <div class="target-detail"><div class="target-detail-label">Published</div><div class="target-detail-value">${escapeHtml(publishedAt)}</div></div>
                     ${isYoutube ? `
-                    <div class="target-detail">
-                      <div class="target-detail-label">Privacy</div>
-                      <div class="target-detail-value"><strong>${escapeHtml(youtubePrivacyLabel(t.youtube_privacy_status || post.youtube_privacy_status || YT_UPLOAD_DEFAULTS.privacyStatus))}</strong></div>
-                    </div>
-
-                    <div class="target-detail">
-                      <div class="target-detail-label">Category</div>
-                      <div class="target-detail-value"><strong>${escapeHtml(youtubeCategoryLabel(t.youtube_category_id || post.youtube_category_id || YT_UPLOAD_DEFAULTS.categoryId))}</strong></div>
-                    </div>` : ""}
-
-                    <div class="target-detail">
-                      <div class="target-detail-label">${isYoutube ? "Video" : "Media"}</div>
-                      <div class="target-detail-value target-media-line">
-                        <span>●</span>
-                        <span class="media-name" title="${escapeHtml(mediaName)}">${escapeHtml(mediaName)}</span>
-                      </div>
-                    </div>
-
-                    <div class="target-detail">
-                      <div class="target-detail-label">Thumbnail</div>
-                      <div class="target-detail-value">
-                        ${targetThumbnail ? `✓ ${escapeHtml(thumbnailLabel)}` : "— None"}
-                      </div>
-                    </div>
-
-                    ${isYoutube ? `
-                    <div class="target-detail target-detail-wide">
-                      <div class="target-detail-label">Native YouTube tags</div>
-                      ${targetTags}
-                    </div>` : ""}
-
-                    <div class="target-detail target-detail-wide">
-                      <div class="target-detail-label">${isYoutube ? "YouTube video ID" : "Platform post / message ID"}</div>
-                      <div class="target-detail-value">${escapeHtml(String(targetIdLabel))}</div>
-                    </div>
-
+                    <div class="target-detail"><div class="target-detail-label">Privacy</div><div class="target-detail-value"><strong>${escapeHtml(youtubePrivacyLabel(t.youtube_privacy_status || post.youtube_privacy_status || YT_UPLOAD_DEFAULTS.privacyStatus))}</strong></div></div>
+                    <div class="target-detail"><div class="target-detail-label">Category</div><div class="target-detail-value"><strong>${escapeHtml(youtubeCategoryLabel(t.youtube_category_id || post.youtube_category_id || YT_UPLOAD_DEFAULTS.categoryId))}</strong></div></div>` : ""}
+                    <div class="target-detail"><div class="target-detail-label">${isYoutube ? "Video" : "Media"}</div><div class="target-detail-value target-media-line"><span>●</span><span class="media-name" title="${escapeHtml(mediaName)}">${escapeHtml(mediaName)}</span></div></div>
+                    <div class="target-detail"><div class="target-detail-label">Thumbnail</div><div class="target-detail-value">${targetThumbnail ? `✓ ${escapeHtml(thumbnailLabel)}` : "— None"}</div></div>
+                    ${isYoutube ? `<div class="target-detail target-detail-wide"><div class="target-detail-label">Native YouTube tags</div>${targetTags}</div>` : ""}
+                    <div class="target-detail target-detail-wide"><div class="target-detail-label">${isYoutube ? "YouTube video ID" : "Platform post / message ID"}</div><div class="target-detail-value">${escapeHtml(String(targetIdLabel))}</div></div>
                     ${errorLine}
                   </div>
-
-                  <div class="target-action-row">
-                    ${ytOpenButton}
-                    ${copyIdButton}
-                  </div>
-
+                  <div class="target-action-row">${ytOpenButton}${copyIdButton}</div>
                   ${attemptsLineSafe(t)}
                   ${ytEmbed}
                 </div>`;
@@ -3652,7 +4647,12 @@
             </div>
           </div>
         </div>`;
-        }).join("");
+          }).join("");
+        } catch (err) {
+          setRundownStatus(`Rundown unavailable: ${err.message || "Network error."}`, "error");
+        } finally {
+          POSTS_FETCH_IN_FLIGHT = false;
+        }
       }
 
       function attemptsLineSafe(target) {
@@ -3742,11 +4742,11 @@
       });
 
       async function startDashboard() {
+        stopPostPolling();
         populateLanguageFilter();
         initDropzone();
         initPremiumPicker();
         await loadAccounts();
-        await loadYoutubeChannels();
 
         initAutoGrowTextareas();
         updateMainMediaUploadControls();
@@ -3756,11 +4756,15 @@
         attachCharCounter(document.getElementById("cf-title"), document.getElementById("cf-title-counter"), CHAR_LIMITS.default_title);
         attachCharCounter(document.getElementById("cf-caption"), document.getElementById("cf-caption-counter"), CHAR_LIMITS.default_caption);
 
-        fetchPosts();
-        setInterval(fetchPosts, 2000);
+        await loadYoutubeChannels();
+        await fetchPosts();
+        startPostPolling();
       }
 
       document.getElementById("auth-form").addEventListener("submit", handleLogin);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && AUTHENTICATED) fetchPosts();
+      });
 
       (async () => {
         try {
